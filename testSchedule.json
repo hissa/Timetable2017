@@ -1,19 +1,104 @@
 {
-    "schedule" : [
-        [
-            "日本史B", "ビジネス実務", "古典B"
-        ],
-        [
-            "情報", "日本史", "ビジネス"
-        ],
-        [
-            "化学", "ビジネス", "体育"
-        ],
-        [
-            "ビジネス", "英語", "化学"
-        ],
-        [
-            "ドリクラ", "家庭", "古典"
-        ]
+    "schedule": [
+        {
+            "date": "2017-04-17",
+            "classes": [
+                {
+                    "subject": "日本史",
+                    "event": "watch",
+                    "text": null
+                },
+                {
+                    "subject": "ビジネス",
+                    "event": "report",
+                    "text": null
+                },
+                {
+                    "subject": "古典",
+                    "event": "none",
+                    "text": null
+                }
+            ]
+        },
+        {
+            "date": "2017-04-18",
+            "classes": [
+                {
+                    "subject": "情報",
+                    "event": "none",
+                    "text": null
+                },
+                {
+                    "subject": "日本史",
+                    "event": "none",
+                    "text": null
+                },
+                {
+                    "subject": "ビジネス",
+                    "event": "none",
+                    "text": null
+                }
+            ]
+        },
+        {
+            "date": "2017-04-19",
+            "classes": [
+                {
+                    "subject": "化学",
+                    "event": "none",
+                    "text": null
+                },
+                {
+                    "subject": "ビジネス",
+                    "event": "none",
+                    "text": null
+                },
+                {
+                    "subject": "体育",
+                    "event": "none",
+                    "text": null
+                }
+            ]
+        },
+        {
+            "date": "2017-04-20",
+            "classes": [
+                {
+                    "subject": "ビジネス",
+                    "event": "none",
+                    "text": null
+                },
+                {
+                    "subject": "英語",
+                    "event": "none",
+                    "text": null
+                },
+                {
+                    "subject": "化学",
+                    "event": "none",
+                    "text": null
+                }
+            ]
+        },
+        {
+            "date": "2017-04-21",
+            "classes": [
+                {
+                    "subject": "ドリクラ",
+                    "event": "none",
+                    "text": null
+                },
+                {
+                    "subject": "家庭",
+                    "event": "none",
+                    "text": null
+                },
+                {
+                    "subject": "古典",
+                    "event": "none",
+                    "text": null
+                }
+            ]
+        }
     ]
 }

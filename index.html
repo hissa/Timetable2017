@@ -63,15 +63,20 @@
         crossorigin="anonymous"></script>
     <script>
     var setSchedule = function(schedules){
-        var i = 0;
-        while(schedules.schedule[i]){
-            var j = 0;
-            while(schedules.schedule[i][j]){
-                var idName = "#" + i + "-" + j;
-                $(idName).text(schedules.schedule[i][j]);
-                j++;
+        var schedule = schedules.schedule;
+        var day = 0;
+        while(schedule[day]){
+            var period = 0;
+            while(schedule[day].classes[period]){
+                var currentPeriod = schedule[day].classes[period];
+                var currentIdName = "#" + day + "-" + period;
+                $(currentIdName).text(currentPeriod.subject);
+                if(currentPeriod.event != "none"){
+                    $(currentIdName).addClass("info");
+                }
+                period++;
             }
-            i++;
+            day++;
         }
     };
     var gotData;
