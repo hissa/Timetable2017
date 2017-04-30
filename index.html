@@ -1,4 +1,5 @@
 <html>
+
 <head>
     <meta charset="utf-8">
 </head>
@@ -8,7 +9,9 @@
         <div class="container-fluid">
         </div>
     </nav>
-    <table class="table">
+    <table id="timetable">
+    </table>
+    <!--<table class="table">
         <thead>
             <tr>
                 <th></th>
@@ -46,7 +49,7 @@
                 </tr>
 
             </tbody>
-        </table>
+        </table>-->
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
         crossorigin="anonymous"></script>
@@ -62,29 +65,47 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
         crossorigin="anonymous"></script>
     <script>
-    var setSchedule = function(schedules){
-        var schedule = schedules.schedule;
-        var day = 0;
-        while(schedule[day]){
-            var period = 0;
-            while(schedule[day].classes[period]){
-                var currentPeriod = schedule[day].classes[period];
-                var currentIdName = "#" + day + "-" + period;
-                $(currentIdName).text(currentPeriod.subject);
-                if(currentPeriod.event != "none"){
-                    $(currentIdName).addClass("info");
-                }
-                period++;
+        var makeTable = function () {
+            $("#timetable").append("<thead id=\"timetableThead\"></thead>");
+            $("#timetableThead").append("<tr id=\"weeksHead\"></tr>");
+            var weeks = ["月", "火", "水", "木", "金"];
+            for (var i = 0; i < 5; i++) {
+                $("#weeksHead")
+                    .append("<th id=\"weeksHead" + i + "\">" + weeks[i] + "</th>");
             }
-            day++;
-        }
-    };
-    var gotData;
-    $.get("testSchedule.json", function(data){
-        console.log(data);
-        gotData = data;
-        setSchedule(gotData);
-    });
+            $("#timetable").append("<tbody id=\"timetableTbody\"></tbody>");
+            for (var period = 0; period < 3; period++) {
+                for (var week = 0; week < 5; week++) {
+                    var idName = "period" + week + "," + period;
+
+                }
+            }
+        };
+
+        var setSchedule = function (schedules) {
+            var schedule = schedules.schedule;
+            var day = 0;
+            while (schedule[day]) {
+                var period = 0;
+                while (schedule[day].classes[period]) {
+                    var currentPeriod = schedule[day].classes[period];
+                    var currentIdName = "#period" + day + "-" + period;
+                    $(currentIdName).text(currentPeriod.subject);
+                    if (currentPeriod.event != "none") {
+                        $(currentIdName).addClass("info");
+                    }
+                    period++;
+                }
+                day++;
+            }
+        };
+        makeTable();
+        var gotData;
+        $.get("testSchedule.json", function (data) {
+            console.log(data);
+            gotData = data;
+            setSchedule(gotData);
+        });
     </script>
 </body>
 
