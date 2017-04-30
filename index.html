@@ -22,27 +22,27 @@
             <tbody>
                 <tr>
                     <th>1</th>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <td id="0-0"></td>
+                    <td id="1-0"></td>
+                    <td id="2-0"></td>
+                    <td id="3-0"></td>
+                    <td id="4-0"></td>
                 </tr>
                 <tr>
                     <th>2</th>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <td id="0-1"></td>
+                    <td id="1-1"></td>
+                    <td id="2-1"></td>
+                    <td id="3-1"></td>
+                    <td id="4-1"></td>
                 </tr>
                 <tr>
                     <th>3</th>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <td id="0-2"></td>
+                    <td id="1-2"></td>
+                    <td id="2-2"></td>
+                    <td id="3-2"></td>
+                    <td id="4-2"></td>
                 </tr>
 
             </tbody>
@@ -62,8 +62,23 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
         crossorigin="anonymous"></script>
     <script>
+    var setSchedule = function(schedules){
+        var i = 0;
+        while(schedules.schedule[i]){
+            var j = 0;
+            while(schedules.schedule[i][j]){
+                var idName = "#" + i + "-" + j;
+                $(idName).text(schedules.schedule[i][j]);
+                j++;
+            }
+            i++;
+        }
+    };
+    var gotData;
     $.get("testSchedule.json", function(data){
-        alert(data);
+        console.log(data);
+        gotData = data;
+        setSchedule(gotData);
     });
     </script>
 </body>
