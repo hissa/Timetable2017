@@ -11,45 +11,6 @@
     </nav>
     <table id="timetable">
     </table>
-    <!--<table class="table">
-        <thead>
-            <tr>
-                <th></th>
-                <th>月</th>
-                <th>火</th>
-                <th>水</th>
-                <th>木</th>
-                <th>金</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>1</th>
-                    <td id="0-0"></td>
-                    <td id="1-0"></td>
-                    <td id="2-0"></td>
-                    <td id="3-0"></td>
-                    <td id="4-0"></td>
-                </tr>
-                <tr>
-                    <th>2</th>
-                    <td id="0-1"></td>
-                    <td id="1-1"></td>
-                    <td id="2-1"></td>
-                    <td id="3-1"></td>
-                    <td id="4-1"></td>
-                </tr>
-                <tr>
-                    <th>3</th>
-                    <td id="0-2"></td>
-                    <td id="1-2"></td>
-                    <td id="2-2"></td>
-                    <td id="3-2"></td>
-                    <td id="4-2"></td>
-                </tr>
-
-            </tbody>
-        </table>-->
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
         crossorigin="anonymous"></script>
@@ -66,18 +27,35 @@
         crossorigin="anonymous"></script>
     <script>
         var makeTable = function () {
+            $("#timetable").addClass("table table-bordered table-striped");
             $("#timetable").append("<thead id=\"timetableThead\"></thead>");
             $("#timetableThead").append("<tr id=\"weeksHead\"></tr>");
             var weeks = ["月", "火", "水", "木", "金"];
-            for (var i = 0; i < 5; i++) {
-                $("#weeksHead")
-                    .append("<th id=\"weeksHead" + i + "\">" + weeks[i] + "</th>");
+            for (var i = 0; i < 6; i++) {
+                if (i == 0) {
+                    // テーブルの左上の空白
+                    $("#weeksHead")
+                        .append("<th id=\"weeksHead0\"></th>");
+                } else {
+                    $("#weeksHead")
+                        .append("<th id=\"weeksHead" + i + "\">" + weeks[i - 1] + "</th>");
+                }
             }
             $("#timetable").append("<tbody id=\"timetableTbody\"></tbody>");
             for (var period = 0; period < 3; period++) {
-                for (var week = 0; week < 5; week++) {
-                    var idName = "period" + week + "," + period;
-
+                $("#timetableTbody").append("<tr id=\"row" + period + "\"></tr>");
+                for (var week = 0; week < 6; week++) {
+                    if (week == 0) {
+                        // コマ数の数字
+                        $("#row" + period)
+                            .append(
+                            "<th id=\"periodHead" + period + "\">" + (period + 1) + "</th>"
+                            );
+                    } else {
+                        var idName = "period" + (week - 1) + "-" + period;
+                        $("#row" + period)
+                            .append("<td id=\"" + idName + "\"></td>");
+                    }
                 }
             }
         };
