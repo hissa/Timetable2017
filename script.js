@@ -32,27 +32,73 @@ var makeTable = function () {
     }
 };
 
-var setSchedule = function (schedules) {
+var searchAllPeriod = function(schedules, func){
     var schedule = schedules.schedule;
     var day = 0;
-    while (schedule[day]) {
+    while(schedule[day]){
         var period = 0;
-        while (schedule[day].classes[period]) {
+        while(schedule[day].classes[period]){
             var currentPeriod = schedule[day].classes[period];
-            var currentIdName = "#period" + day + "-" + period;
-            $(currentIdName).text(currentPeriod.subject);
-            if (currentPeriod.event != "none") {
-                $(currentIdName).addClass("info");
-            }
+            func(currentPeriod, day, period);
             period++;
         }
         day++;
     }
 };
+
+var extractDetails = function (schedules) {
+    var details = [];
+    searchAllPeriod(schedules, function (currentPeriod) {
+        if (currentPeriod.event != "none") {
+            details.push({
+                subject: currentPeriod.subject,
+                event: currentPeriod.event,
+                text: currentPeriod.text
+            });
+        }
+    });
+    console.log(details);
+    return details;
+};
+
+var makeDetails = function(schedules){
+    var details = extractDetails(schedules);
+    $("#details").addClass("table table-bordered table-striped");
+    $("#details").append("<tbody id=\"detailsTbody\" />");
+    var i = 0;
+    while(details[i]){
+        var rowId = "dRow"+i;
+        $("#detailsTbody").append("<tr id=\""+rowId+"\" />");
+        $("#"+rowId).append(
+            "<td>"+details[i].subject+"</td>"
+        );
+        $("#"+rowId).append(
+            "<td>"+details[i].event+"</td>"
+        );
+        $("#"+rowId).append(
+            "<td>"+details[i].text+"</td>"
+        );
+        i++;
+    }
+};
+
+var setSchedule = function(schedules){
+    searchAllPeriod(schedules, function(currentPeriod, day, period){
+        var currentIdName = "#period" + day + "-" + period;
+        $(currentIdName).text(currentPeriod.subject);
+        if(currentPeriod.event != "none"){
+            $(currentIdName).addClass("info");
+        }
+    });
+};
+
+
+
 makeTable();
 var gotData;
 $.get("testSchedule.json", function (data) {
     console.log(data);
     gotData = data;
     setSchedule(gotData);
+    makeDetails(gotData);
 });
