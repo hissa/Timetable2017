@@ -1,0 +1,14 @@
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+    crossorigin="anonymous"></script>
+
+<script>
+    var data = {
+        startDate: "2017-04-17",
+        endDate: "2017-04-22"
+    };
+    var url = "test.php";
+    $.get(url, data, function(gotData){
+        console.log(gotData);
+    });
+</script>
