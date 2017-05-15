@@ -1,4 +1,8 @@
 <?php
 class Response{
-    protected $data;
+    protected $Days;
+
+    function __construct($days){
+        $this->Days += $days;
+    }
 }

@@ -1,32 +1,37 @@
 <?php
 class Database{
-    protected static $configFileName;
-    protected static $host;
-    protected static $username;
-    protected static $password;
-    protected static $dbname;
-    protected static $dsn;
+    protected static $ConfigFileName = "config.json";
+    protected static $Host;
+    protected static $Username;
+    protected static $Password;
+    protected static $Dbname;
+    protected static $Dsn;
 
     protected static function initialize(){
-        static::loadConfig($configFileName);
-        static::$dsn
-            = "mysql:dbname=".static::$dbname.";host=".static::$host.";charset=utf8";
+        static::loadConfig(static::$ConfigFileName);
+        static::$Dsn
+            = "mysql:dbname=".static::$Dbname.";host=".static::$Host.";charset=utf8";
     }
 
     protected static function loadConfig($filename){
         $configStr = file_get_contents($filename);
         $config = json_decode($configStr, true);
         $dbconfig = $config["database"];
-        static::$host = $dbconfig["host"];
-        static::$username = $dbconfig["username"];
-        static::$password = $dbconfig["password"];
-        static::$dbname = $dbconfig["dbname"];
+        static::$Host = $dbconfig["host"];
+        static::$Username = $dbconfig["username"];
+        static::$Password = $dbconfig["password"];
+        static::$Dbname = $dbconfig["dbname"];
     }
 
     public static function getPdoObject(){
-        if(!static::$dsn){
+        if(!static::$Dsn){
             static::initialize();
         }
-        $pdo = new PDO($dsn, $username, $password);
+        try{
+            $pdo = new PDO(static::$Dsn, static::$Username, static::$Password);
+        }catch(Exception $e){
+            throw new Exception("データベースへの接続に失敗しました。");
+        }
+        return $pdo;
     }
 }

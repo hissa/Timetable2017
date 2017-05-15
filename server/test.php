@@ -21,5 +21,6 @@ ini_set("display_errors", 1);
 // var_dump($result);
 // var_dump(json_encode($result));
 
-require "Database.php";
-Database::loadConfig("config.json");
+require_once "Request.php";
+$rq = new Request("2017-04-17", "2017-04-21");
+$rs = $rq->fetchEvents();
