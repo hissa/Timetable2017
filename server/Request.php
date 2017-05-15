@@ -62,5 +62,6 @@ class Request{
             $i++;
         }
         var_dump($periods);
+        // 次は時間割をデータベースから取得するあれ
     }
 }
