@@ -33,19 +33,34 @@ class Request{
     }
 
     private function makeResponse($data){
-        $currentDate = $this->StartDate;
-        while($currentDate->lte($this->EndDate)){
-            $periods = [];
-            $i = 0;
-            while(isset($data[$i])){
-                $thisDate = Carbon::parse($data[$i]["date"]);
-                if($currentDate->eq($thisDate)){
-                    $periods += [Period::parseArray($data[$i])];
-                }
-                var_dump($periods);
-                $i++;
-            }
-            $currentDate = $currentDate->addDay();
+        // var_dump($data);
+        // $currentDate = $this->StartDate;
+        $periods = [];
+        // while($currentDate->lte($this->EndDate)){
+        //     // var_dump($currentDate, $this->EndDate);
+        //     $periodsOfDay = [];
+        //     $i = 0;
+        //     while(isset($data[$i])){
+        //         var_dump($i);
+        //         $thisDate = Carbon::parse($data[$i]["date"]);
+        //         if($currentDate->eq($thisDate)){
+        //             $periodsOfDay += [Period::parseArray($data[$i])];
+        //         }
+        //         $i++;
+        //         // var_dump($periodsOfDay);
+        //     }
+        //     $currentDate = $currentDate->addDay();
+        //     $periods += $periodsOfDay;
+        // }
+        $i = 0;
+        while(isset($data[$i])){
+            $currentData = $data[$i];
+            $subject = $currentData["subject_id"];
+            $eventType = $currentData["event_type"];
+            $text = $currentData["text"];
+            $periods = array_merge($periods, [new Period($subject, $eventType, $text)]);
+            $i++;
         }
+        var_dump($periods);
     }
 }

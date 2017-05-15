@@ -1,22 +1,22 @@
 <?php
 class Period{
     protected $Subject;
-    protected $Event;
+    protected $EventType;
     protected $Text;
 
-    function __construct($subject, $event, $text = null){
+    function __construct($subject, $eventType, $text = null){
         $this->Subject = $subject;
         $this->Text = $text;
-        if(!($event === "none" || $event === "watch" || $event === "report")){
+        if(!($eventType === "none" || $eventType === "watch" || $eventType === "report")){
             throw new Exception("eventの値が不正です。");
         }
-        $this->Event = $event;
+        $this->EventType = $eventType;
     }
 
     public static function parseArray($array){
         $subject = $array["subject_id"];
-        $event = $array["event_type"];
+        $eventEvent = $array["event_type"];
         $text = $array["text"];
-        return new static($subject, $event, $text);
+        return new static($subject, $eventType, $text);
     }
 }
