@@ -18,7 +18,6 @@ class Subject{
         while(isset(static::$SubjectsTable[$i])){
             if(static::$SubjectsTable[$i]["id"] == $subjectId){
                 $found = $i;
-                var_dump($found);
                 break;
             }
             $i++;

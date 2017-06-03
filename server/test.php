@@ -21,8 +21,14 @@ ini_set("display_errors", 1);
 // var_dump($result);
 // var_dump(json_encode($result));
 
-require_once "Request.php";
-// $rq = new Request("2017-04-17", "2017-04-21");
-// $rs = $rq->fetchEvents();
-require_once "Subject.php";
-var_dump(new Subject(1));
+// require_once "Request.php";
+// // $rq = new Request("2017-04-17", "2017-04-21");
+// // $rs = $rq->fetchEvents();
+// require_once "Subject.php";
+// var_dump(new Subject(1));
+
+require "Database.php";
+require "Timetable.php";
+require "Subject.php";
+
+Timetable::GetSchedules();
