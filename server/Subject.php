@@ -1,8 +1,8 @@
 <?php
 class Subject{
-    public $SubjectId;
-    public $SubjectName;
-    public $SubjectShortName;
+    public $Id;
+    public $Name;
+    public $ShortName;
 
     protected static $SubjectsTable;
 
@@ -18,7 +18,6 @@ class Subject{
         while(isset(static::$SubjectsTable[$i])){
             if(static::$SubjectsTable[$i]["id"] == $subjectId){
                 $found = $i;
-                var_dump($found);
                 break;
             }
             $i++;
@@ -26,9 +25,9 @@ class Subject{
         if($found < 0){
             throw new Exception("SubjectIdが存在しない可能性があります。");
         }
-        $this->SubjectId = static::$SubjectsTable[$found]["id"];
-        $this->SubjectName = static::$SubjectsTable[$found]["name"];
-        $this->SubjectShortName = static::$SubjectsTable[$found]["short_name"];
+        $this->Id = static::$SubjectsTable[$found]["id"];
+        $this->Name = static::$SubjectsTable[$found]["name"];
+        $this->ShortName = static::$SubjectsTable[$found]["short_name"];
     }
 
     protected static function Initialize(){
@@ -50,5 +49,21 @@ class Subject{
             $i++;
         }
         static::$SubjectsTable = $table;
+     }
+
+     public static function GetSchedules(){
+        $pdo = Database::getPdoObject();
+        $sql = "select * from schedules;";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([]);
+        $result = $stmt->fetchAll();
+        $schedules = [[]];
+        $i = 0;
+        while(isset($result[$i])){
+            $schedules[$result[$i]["week_num"]][$result[$i]["period_num"]] =
+                new static($result[$i]["subject_id"]);
+            $i++;
+        }
+        return $schedules;
      }
 }

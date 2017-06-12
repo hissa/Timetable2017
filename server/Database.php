@@ -1,6 +1,6 @@
 <?php
 class Database{
-    protected static $ConfigFileName = "config.json";
+    protected static $ConfigFileName;
     protected static $Host;
     protected static $Username;
     protected static $Password;
@@ -8,6 +8,7 @@ class Database{
     protected static $Dsn;
 
     protected static function initialize(){
+        static::$ConfigFileName = dirname(__FILE__)."/config.json";
         static::loadConfig(static::$ConfigFileName);
         static::$Dsn
             = "mysql:dbname=".static::$Dbname.";host=".static::$Host.";charset=utf8";
