@@ -34,7 +34,7 @@ class ServerAccesser{
     getJson(url, success){
         $.getJSON(url, (data, textStatus)=>{
             if(textStatus != "success"){
-                throw new Error("サーバーとの通信に失敗しました。 status: " + textStatus);
+                throw new Error("サーバーとの通信に失敗しました。 status: {0}".format(textStatus));
             }
             success(data);
         });
