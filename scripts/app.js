@@ -5,18 +5,63 @@ class App{
         var end = moment("2017-04-21", "YYYY-MM-DD");
         App.timetables = [];
         App.timetables.push(new Timetable(start, end));
-        App.makePagination($("#timetablePagination"));
+        var pagination = new TimetablePagination(
+            "Current", "PreviousButton", "NextButton"
+        );
+        pagination.makePagination($("#timetablePagination"));
+    }
+}
+
+class TimetablePagination{    
+    constructor(center = "", previous = "", next = ""){
+        this.paginationObject = null;
+        this.UniqueId = TimetablePagination.getUniqueId();
+        this.center = center;
+        this.previous = previous;
+        this.next = next;
+        this.idNameCenter = "pagination{0}Center".format(this.UniqueId);
+        this.idNamePrevious = "pagination{0}Previous".format(this.UniqueId);
+        this.idNameNext = "pagination{0}Next".format(this.UniqueId);
+    }
+    
+    makePagination(paginationObject){
+        paginationObject.append("<li id=\"{0}\" />".format(this.idNamePrevious));
+        paginationObject.append("<li id=\"{0}\" />".format(this.idNameCenter));
+        paginationObject.append("<li id=\"{0}\" />".format(this.idNameNext));
+        this.setTexts();
     }
 
-    static makePagination(paginationObject){
-        paginationObject.append("<li id=\"paginationPrevious\" />");
-        paginationObject.append("<li id=\"paginationCurrent\" />");
-        paginationObject.append("<li id=\"paginationNext\" />");
-        $("#paginationPrevious").text("PreviousButton").wrapInner("<a href=\"#\" />");
-        $("#paginationCurrent").text("Current").wrapInner("<a href=\"#\" />");
-        $("#paginationNext").text("NextButton").wrapInner("<a href=\"#\" />");
-        $("#paginationCurrent").addClass("active");
-        console.log("done");
+    setTexts(){
+        $("#{0}".format(this.idNamePrevious)).text(this.previous)
+            .wrapInner("<a href=\"#\" />");
+        $("#{0}".format(this.idNameCenter)).text(this.center)
+            .wrapInner("<a href=\"#\" />").addClass("active");
+        $("#{0}".format(this.idNameNext)).text(this.next)
+                .wrapInner("<a href=\"#\" />");
+    }
+
+    setCenter(str){
+        this.center = str;
+        this.setTexts();
+    }
+
+    setPrevious(str){
+        this.previous = previous;
+        this.setText();
+    }
+
+    setNext(str){
+        this.next = str;
+        this.setTexts();
+    }
+
+    static getUniqueId(){
+        if(TimetablePagination.usedUniqueId == undefined){
+            TimetablePagination.usedUniqueId = 0;
+        }
+        var toUse = TimetablePagination.usedUniqueId;
+        TimetablePagination.usedUniqueId++;
+        return toUse;
     }
 }
 
