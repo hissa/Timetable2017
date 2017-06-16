@@ -3,8 +3,20 @@ class App{
     static main(){
         var start = moment("2017-04-17", "YYYY-MM-DD");
         var end = moment("2017-04-21", "YYYY-MM-DD");
-        this.timetables = [];
-        this.timetables.push(new Timetable(start, end));     
+        App.timetables = [];
+        App.timetables.push(new Timetable(start, end));
+        App.makePagination($("#timetablePagination"));
+    }
+
+    static makePagination(paginationObject){
+        paginationObject.append("<li id=\"paginationPrevious\" />");
+        paginationObject.append("<li id=\"paginationCurrent\" />");
+        paginationObject.append("<li id=\"paginationNext\" />");
+        $("#paginationPrevious").text("PreviousButton").wrapInner("<a href=\"#\" />");
+        $("#paginationCurrent").text("Current").wrapInner("<a href=\"#\" />");
+        $("#paginationNext").text("NextButton").wrapInner("<a href=\"#\" />");
+        $("#paginationCurrent").addClass("active");
+        console.log("done");
     }
 }
 
@@ -61,6 +73,7 @@ class ServerAccesser{
 
 class Timetable{
     constructor(startDate, endDate){
+        this.uniqueId = Timetable.getUniqueId;
         this.startDate = startDate;
         this.endDate = endDate;
         this.days = [];
@@ -73,6 +86,19 @@ class Timetable{
             this.addEventsData(data);
             this.tryMakeData();
         });
+    }
+
+    makeTimetable(tableObject){
+
+    }
+
+    getUniqueId(){
+        if(Timetable.usedUniqueId == undefined){
+            Timetable.usedUniqueId = 0;
+        }
+        var toUse = Timetable.usedUniqueId;
+        Timetable.usedUniqueId++;
+        return toUse;
     }
 
     addScheduleData(data){
