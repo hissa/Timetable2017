@@ -4,7 +4,9 @@ class App{
         var start = moment("2017-04-17", "YYYY-MM-DD");
         var end = moment("2017-04-21", "YYYY-MM-DD");
         App.timetables = [];
-        App.timetables.push(new Timetable(start, end));
+        App.timetables.push(new Timetable(start, end, ()=>{
+            App.timetables[0].makeTimetable($("#timetable"));
+        }));
         var pagination = new TimetablePagination(
             "Current", "PreviousButton", "NextButton"
         );
@@ -117,10 +119,11 @@ class ServerAccesser{
 }
 
 class Timetable{
-    constructor(startDate, endDate){
-        this.uniqueId = Timetable.getUniqueId;
+    constructor(startDate, endDate, ready){
+        this.uniqueId = Timetable.getUniqueId();
         this.startDate = startDate;
         this.endDate = endDate;
+        this.ready = ready;
         this.days = [];
         this.accesser = new ServerAccesser();
         this.accesser.getSchedule((data)=>{
@@ -134,10 +137,60 @@ class Timetable{
     }
 
     makeTimetable(tableObject){
-
+        var weeks = ["月", "火", "水", "木", "金"];
+        tableObject.append("<thead id=\"table{0}thead\" />".format(this.uniqueId));
+        $("#table{0}thead".format(this.uniqueId))
+            .append("<tr id=\"table{0}headtr\" />".format(this.uniqueId));
+        $("#table{0}headtr".format(this.uniqueId))
+            .append("<th id=\"table{0}topleft\" />".format(this.uniqueId));
+        for(var i = 0; i < 5; i++){
+            $("#table{0}headtr".format(this.uniqueId))
+                .append("<th id=\"table{0}week{1}\">{2}</th>"
+                    .format(this.uniqueId, i, weeks[i]));
+        }
+        tableObject.append("<tbody id=\"table{0}tbody\" />".format(this.uniqueId));
+        for(var period = 0; period <= 2; period++){
+            $("#table{0}tbody".format(this.uniqueId))
+                .append("<tr id=\"table{0}tr{1}\" />".format(this.uniqueId, period));
+            for(var week = 0; week <= 5; week++){
+                if(week == 0){
+                    $("#table{0}tr{1}".format(this.uniqueId, period))
+                        .append("<th id=\"table{0}numhead{1}\">{1}</th>"
+                            .format(this.uniqueId, period + 1));
+                }else{
+                    $("#table{0}tr{1}".format(this.uniqueId, period))
+                        .append("<td id=\"table{0}w{1}p{2}\" />"
+                            .format(this.uniqueId, week - 1, period));
+                }
+            }
+        }
+        this.setSubjectNames();
+        this.setEvents();
     }
 
-    getUniqueId(){
+    setSubjectNames(shortName = false){
+        for(var week = 0; week < 5; week++){
+            var day = this.days[week];
+            for(var period = 0; period < 3; period++){
+                $("#table{0}w{1}p{2}".format(this.uniqueId, week, period))
+                    .text(day.periods[period].subject.name);
+            }
+        }
+    }
+
+    setEvents(){
+        for(var week = 0; week < 5; week++){
+            var day = this.days[week];
+            for(var period = 0; period < 3; period++){
+                if(day.periods[period].event != null){
+                    $("#table{0}w{1}p{2}".format(this.uniqueId, week, period))
+                        .addClass("info");
+                }
+            }
+        }
+    }
+
+    static getUniqueId(){
         if(Timetable.usedUniqueId == undefined){
             Timetable.usedUniqueId = 0;
         }
@@ -188,6 +241,7 @@ class Timetable{
             day++;
         }
         console.log(this.days);
+        this.ready();
     }
 
     searchEvents(date, subjectId){
