@@ -166,9 +166,6 @@ class Timetable{
         }
         this.setSubjectNames();
         this.setEvents();
-        //debug
-        console.log(this.startDate.format("YYYY-MM-DD"));
-        this.highlightDay(this.startDate);
     }
 
     setSubjectNames(shortName = false){
@@ -278,10 +275,29 @@ class Timetable{
         });
     }
 
+    clearHilightDay(){
+        this.doToAllCell((jqueryObj)=>{
+            if(jqueryObj.hasClass("success")){
+                jqueryObj.removeClass("success");
+            }
+        });
+    }
+
     doToColumn(columnNum, func){
         func($("#table{0}week{1}".format(this.uniqueId, columnNum)));
         for(var i = 0; i < 3; i++){
             func($("#table{0}w{1}p{2}".format(this.uniqueId, columnNum, i)))
+        }
+    }
+
+    doToAllCell(func){
+        func($("#table{0}topleft".format(this.uniqueId)));
+        for(var i = 0; i < 5; i++){
+            func($("#table{0}week{1}".format(this.uniqueId, i)));
+            for(var j = 0; j < 3; j++){
+                func($("#table{0}w{1}p{2}".format(this.uniqueId, i, j)));
+                func($("#table{0}numhead{1}".format(this.uniqueId, j + 1)));
+            }
         }
     }
 
