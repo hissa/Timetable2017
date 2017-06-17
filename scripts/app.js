@@ -6,6 +6,7 @@ class App{
         App.timetables = [];
         App.timetables.push(new Timetable(start, end, ()=>{
             App.timetables[0].makeTimetable($("#timetable"));
+            App.timetables[0].makeEventList($("#eventlist"));
         }));
         var pagination = new TimetablePagination(
             "Current", "PreviousButton", "NextButton"
@@ -312,6 +313,24 @@ class Timetable{
             throw new Error("日付が見つかりませんでした。");
         }
         return dayNum;
+    }
+
+    makeEventList(tableObject){
+        tableObject.append("<thead id=\"table{0}eventlistThead\" />".format(this.uniqueId));
+        $("#table{0}eventlistThead".format(this.uniqueId),this.uniqueId)
+            .append("<tr id=\"table{0}eventlistTheadTr\" />".format(this.uniqueId));
+        $("#table{0}eventlistTheadTr".format(this.uniqueId))
+            .append("<th id=\"table{0}eventlistHead{1}\">{2}</th>"
+                .format(this.uniqueId, "Date", "日付"))
+            .append("<th id=\"table{0}eventlistHead{1}\">{2}</th>"
+                .format(this.uniqueId, "Subject", "教科"))
+            .append("<th id=\"table{0}eventlistHead{1}\">{2}</th>"
+                .format(this.uniqueId, "Text", "詳細"));
+        var i =0;
+        while(this.eventsData[i]){
+
+            i++;
+        }
     }
 }
 
