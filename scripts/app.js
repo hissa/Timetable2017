@@ -166,6 +166,9 @@ class Timetable{
         }
         this.setSubjectNames();
         this.setEvents();
+        //debug
+        console.log(this.startDate.format("YYYY-MM-DD"));
+        this.highlightDay(this.startDate);
     }
 
     setSubjectNames(shortName = false){
@@ -255,6 +258,44 @@ class Timetable{
             i++;
         }
         return results;
+    }
+
+    isContain(date){
+        // startとendの日が含まれるようにする。
+        return date.isAfter(this.startDate.clone().subtract(1, "days")) &&
+            date.isBefore(this.endDate.clone().add(1, "days"));
+    }
+
+    highlightDay(date){
+        if(!this.isContain(date)){
+            throw new Error("指定された日付はこのテーブルに含まれません。");
+        }
+        var dayNum = this.getWeekNumber(date);
+        this.doToColumn(dayNum, (jqueryObj)=>{
+            if(!jqueryObj.hasClass("info")){
+                jqueryObj.addClass("success");
+            }
+        });
+    }
+
+    doToColumn(columnNum, func){
+        func($("#table{0}week{1}".format(this.uniqueId, columnNum)));
+        for(var i = 0; i < 3; i++){
+            func($("#table{0}w{1}p{2}".format(this.uniqueId, columnNum, i)))
+        }
+    }
+
+    getWeekNumber(date){
+        var dayNum = null;
+        for(var day = 0; day < 5; day++){
+            if(this.days[day].date.isSame(date, "day")){
+                dayNum = day;
+            }
+        }
+        if(dayNum == null){
+            throw new Error("日付が見つかりませんでした。");
+        }
+        return dayNum;
     }
 }
 
