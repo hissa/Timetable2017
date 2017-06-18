@@ -1,17 +1,37 @@
 class App{
 
     static main(){
-        var start = moment("2017-04-17", "YYYY-MM-DD");
-        var end = moment("2017-04-21", "YYYY-MM-DD");
-        App.timetables = [];
-        App.timetables.push(new Timetable(start, end, ()=>{
-            App.timetables[0].makeTimetable($("#timetable"));
-            App.timetables[0].makeEventList($("#eventlist"));
-        }));
-        var pagination = new TimetablePagination(
-            "Current", "PreviousButton", "NextButton"
-        );
-        pagination.makePagination($("#timetablePagination"));
+        App.showingWeek = 0;
+        App.hourOfNextDay = 15;
+        App.today = App.getToday();
+        console.log("today: {0}".format(App.today.format("YYYY-MM-DD")));
+        var start = moment().day("Monday");
+        var end = moment().day("Friday");
+        App.timetable = new Timetable(start, end, ()=>{
+            App.timetable.makeTimetable($("#timetable"));
+            App.timetable.makeEventList($("#eventlist"));
+            if(App.timetable.isContain(App.today)){
+                App.timetable.highlightDay(App.today);
+            }
+        });
+        App.pagination = new TimetablePagination(
+            "前の週へ", "今週を表示", "次の週へ"
+        )
+        App.pagination.makePagination($("#timetablePagination"));
+    }
+
+    static getToday(date = null){
+        date = date == null ? moment() : date;
+        if(date.format("H") >= App.hourOfNextDay){
+            date.add(1, "days");
+        }
+        if(date.format("d") == 0){
+            date.add(1, "days");
+        }
+        if(date.format("d") == 6){
+            date.add(2, "days");
+        }
+        return date;
     }
 }
 
