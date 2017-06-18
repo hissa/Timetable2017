@@ -5,19 +5,8 @@ class App{
         App.hourOfNextDay = 15;
         App.today = App.getToday();
         console.log("today: {0}".format(App.today.format("YYYY-MM-DD")));
-        var start = moment().day("Monday");
-        var end = moment().day("Friday");
-        App.timetable = new Timetable(start, end, ()=>{
-            App.timetable.makeTimetable($("#timetable"));
-            App.timetable.makeEventList($("#eventlist"));
-            if(App.timetable.isContain(App.today)){
-                App.timetable.highlightDay(App.today);
-            }
-        });
-        App.pagination = new TimetablePagination(
-            "前の週へ", "今週を表示", "次の週へ"
-        )
-        App.pagination.makePagination($("#timetablePagination"));
+        App.showTimetable();
+        App.showPagination();
     }
 
     static getToday(date = null){
@@ -33,6 +22,54 @@ class App{
         }
         return date;
     }
+
+    static showPagination(){
+        App.pagination = new TimetablePagination(
+            "今週を表示", "前の週へ", "次の週へ"
+        );
+        App.pagination.makePagination($("#timetablePagination"));
+        App.pagination.setLinkPrevious("javascript:App.subtractShowingWeek()");
+        App.pagination.setLinkNext("javascript:App.addShowingWeek()");
+        App.pagination.setLinkCenter("javascript:App.setZeroShowingWeek()");
+    }
+
+    static showTimetable(){
+        App.removeShowing();
+        var date = App.today.clone();
+        console.log("showingWeek:{0}".format(App.showingWeek));
+        var start = date.clone().add(App.showingWeek, "weeks").day("Monday");
+        var end = start.clone().day("Friday");
+        console.log("showing start:{0} end:{1}"
+            .format(start.format("YYYY-MM-DD"), end.format("YYYY-MM-DD")));
+        App.timetable = new Timetable(start, end, ()=>{
+            App.removeShowing();
+            App.timetable.makeTimetable($("#timetable"));
+            App.timetable.makeEventList($("#eventlist"));
+            if(App.timetable.isContain(App.today)){
+                App.timetable.highlightDay(App.today);
+            }
+        });
+    }
+
+    static removeShowing(){
+        $("#timetable").empty();
+        $("#eventlist").empty();
+    }
+
+    static addShowingWeek(num = 1){
+        App.showingWeek += num;
+        App.showTimetable();
+    }
+
+    static subtractShowingWeek(num = 1){
+        App.showingWeek -= num;
+        App.showTimetable();
+    }
+
+    static setZeroShowingWeek(){
+        App.showingWeek = 0;
+        App.showTimetable();
+    }
 }
 
 class TimetablePagination{    
@@ -42,6 +79,9 @@ class TimetablePagination{
         this.center = center;
         this.previous = previous;
         this.next = next;
+        this.linkCenter = "#";
+        this.linkPrevious = "#";
+        this.linkNext = "#";
         this.idNameCenter = "pagination{0}Center".format(this.UniqueId);
         this.idNamePrevious = "pagination{0}Previous".format(this.UniqueId);
         this.idNameNext = "pagination{0}Next".format(this.UniqueId);
@@ -56,11 +96,11 @@ class TimetablePagination{
 
     setTexts(){
         $("#{0}".format(this.idNamePrevious)).text(this.previous)
-            .wrapInner("<a href=\"#\" />");
+                .wrapInner("<a href=\"{0}\" />".format(this.linkPrevious));
         $("#{0}".format(this.idNameCenter)).text(this.center)
-            .wrapInner("<a href=\"#\" />").addClass("active");
+                .wrapInner("<a href=\"{0}\" />".format(this.linkCenter));
         $("#{0}".format(this.idNameNext)).text(this.next)
-                .wrapInner("<a href=\"#\" />");
+                .wrapInner("<a href=\"{0}\" />".format(this.linkNext));
     }
 
     setCenter(str){
@@ -75,6 +115,21 @@ class TimetablePagination{
 
     setNext(str){
         this.next = str;
+        this.setTexts();
+    }
+
+    setLinkCenter(str){
+        this.linkCenter = str;
+        this.setTexts();
+    }
+
+    setLinkPrevious(str){
+        this.linkPrevious = str;
+        this.setTexts();
+    }
+
+    setLinkNext(str){
+        this.linkNext = str;
         this.setTexts();
     }
 
@@ -339,7 +394,7 @@ class Timetable{
     makeEventList(tableObject){
         tableObject.append("<thead id=\"table{0}eventlistThead\" />".format(this.uniqueId))
             .append("<tbody id=\"table{0}eventlistTbody\" />".format(this.uniqueId));
-        $("#table{0}eventlistThead".format(this.uniqueId),this.uniqueId)
+        $("#table{0}eventlistThead".format(this.uniqueId))
             .append("<tr id=\"table{0}eventlistTheadTr\" />".format(this.uniqueId));
         $("#table{0}eventlistTheadTr".format(this.uniqueId))
             .append("<th id=\"table{0}eventlistHead{1}\">{2}</th>"
