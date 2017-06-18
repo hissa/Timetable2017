@@ -35,11 +35,7 @@ class Timetable{
             $period = 0;
             while(isset($schedules[$week][$period])){
                 $current = $schedules[$week][$period];
-                $schedulesAry[$week][$period] = [
-                    "id" => $current->Id,
-                    "name" => $current->Name,
-                    "short_name" => $current->ShortName
-                ];
+                $schedulesAry[$week][$period] = $current->ToArray();
                 $period++;
             }
             $week++;
@@ -66,13 +62,7 @@ class Timetable{
         $i = 0;
         while(isset($events[$i])){
             $current = $events[$i];
-            array_push($eventsStr, [
-                "id" => $current->Id,
-                "date" => $current->Date->format("Y-m-d"),
-                "subject_id" => $current->Subject->Id,
-                "eventtype" => $current->EventType,
-                "text" => $current->Text
-            ]);
+            array_push($eventsStr, $current->ToArray());
             $i++;
         }
         return $eventsStr;

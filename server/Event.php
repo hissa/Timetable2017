@@ -59,4 +59,15 @@ class Event{
         }
         return $events;
     }
+
+    public function ToArray(){
+        return [
+            "id" => $this->Id,
+            "date" => $this->Date->format("Y-m-d"),
+            "subject_id" => $this->Subject->Id,
+            "subject" => $this->Subject->ToArray(),
+            "eventtype" => $this->EventType,
+            "text" => $this->Text
+        ];
+    }
 }

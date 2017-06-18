@@ -66,4 +66,12 @@ class Subject{
         }
         return $schedules;
      }
+
+     public function ToArray(){
+         return [
+             "id" => $this->Id,
+             "name" => $this->Name,
+             "short_name" => $this->ShortName
+         ];
+     }
 }
