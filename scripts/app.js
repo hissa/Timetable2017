@@ -242,6 +242,7 @@ class Timetable{
             day++;
         }
         console.log(this.days);
+        console.log(this.eventsData);
         this.ready();
     }
 
@@ -316,7 +317,8 @@ class Timetable{
     }
 
     makeEventList(tableObject){
-        tableObject.append("<thead id=\"table{0}eventlistThead\" />".format(this.uniqueId));
+        tableObject.append("<thead id=\"table{0}eventlistThead\" />".format(this.uniqueId))
+            .append("<tbody id=\"table{0}eventlistTbody\" />".format(this.uniqueId));
         $("#table{0}eventlistThead".format(this.uniqueId),this.uniqueId)
             .append("<tr id=\"table{0}eventlistTheadTr\" />".format(this.uniqueId));
         $("#table{0}eventlistTheadTr".format(this.uniqueId))
@@ -328,7 +330,19 @@ class Timetable{
                 .format(this.uniqueId, "Text", "詳細"));
         var i =0;
         while(this.eventsData[i]){
-
+            $("#table{0}eventlistTbody".format(this.uniqueId))
+                .append("<tr id=\"table{0}eventlistId{1}\" />"
+                    .format(this.uniqueId, this.eventsData[i].id));
+            $("#table{0}eventlistId{1}".format(this.uniqueId, this.eventsData[i].id))
+                .append("<td id=\"table{0}eventlistId{1}{2}\">{3}</td>"
+                    .format(this.uniqueId, this.eventsData[i].id, "Date",
+                            this.eventsData[i].date.format("MM / DD")))
+                .append("<td id=\"table{0}eventlistId{1}{2}\">{3}</td>"
+                    .format(this.uniqueId, this.eventsData[i].id, "Subject",
+                            this.eventsData[i].subject.shortName))
+                .append("<td id=\"table{0}eventlistId{1}{2}\">{3}</td>"
+                    .format(this.uniqueId, this.eventsData[i].id, "Text",
+                            this.eventsData[i].text));
             i++;
         }
     }
@@ -377,11 +391,11 @@ class Period{
 }
 
 class Event{
-    constructor(id, date, eventType, subjectId, text){
+    constructor(id, date, eventType, subject, text){
         this.id = id;
         this.date = date;
         this.eventType = eventType;
-        this.subjectId = subjectId;
+        this.subject = subject;
         this.text = text;
     }
 
@@ -389,9 +403,9 @@ class Event{
         var id = data["id"];
         var date = moment(data["date"], "YYYY-MM-DD");
         var eventType = data["eventtype"];
-        var subjectId = data["subject_id"];
+        var subject = Subject.parse(data["subject"]);
         var text = data["text"];
-        return new Event(id, date, eventType, subjectId, text);
+        return new Event(id, date, eventType, subject, text);
     }
 }
 
