@@ -28,9 +28,9 @@ class App{
             "今週を表示", "前の週へ", "次の週へ"
         );
         App.pagination.makePagination($("#timetablePagination"));
-        App.pagination.setLinkPrevious("javascript:App.subtractShowingWeek()");
-        App.pagination.setLinkNext("javascript:App.addShowingWeek()");
-        App.pagination.setLinkCenter("javascript:App.setZeroShowingWeek()");
+        App.pagination.setFuncCenter(()=>{App.setZeroShowingWeek();});
+        App.pagination.setFuncPrevious(()=>{App.subtractShowingWeek();});
+        App.pagination.setFuncNext(()=>{App.addShowingWeek();});
     }
 
     static showTimetable(){
@@ -118,19 +118,16 @@ class TimetablePagination{
         this.setTexts();
     }
 
-    setLinkCenter(str){
-        this.linkCenter = str;
-        this.setTexts();
+    setFuncCenter(func){
+        $("#{0}".format(this.idNameCenter)).off("click").on("click", func);
     }
 
-    setLinkPrevious(str){
-        this.linkPrevious = str;
-        this.setTexts();
+    setFuncPrevious(func){
+        $("#{0}".format(this.idNamePrevious)).off("click").on("click", func);
     }
 
-    setLinkNext(str){
-        this.linkNext = str;
-        this.setTexts();
+    setFuncNext(func){
+        $("#{0}".format(this.idNameNext)).off("click").on("click", func);
     }
 
     static getUniqueId(){
@@ -148,6 +145,7 @@ class ServerAccesser{
     constructor(){
         this.getSchedulesUrl = "api/v1/get_schedule.php";
         this.getEventListUrl = "api/v1/get_eventlist.php";
+        this.submitNewEventUrl = "api/v1/submit_new_event.php";
     }
 
     getSchedule(callback){
@@ -186,6 +184,27 @@ class ServerAccesser{
 
     getJson(url, success){
         $.getJSON(url, (data, textStatus)=>{
+            if(textStatus != "success"){
+                throw new Error("サーバーとの通信に失敗しました。 status: {0}".format(textStatus));
+            }
+            success(data);
+        });
+    }
+
+    submitNewEvent(event, callback){
+        var data = {
+            "date": event.date.format("YYYY-MM-DD"),
+            "subject_id": event.subject.id,
+            "event_type": event.eventType,
+            "text": event.text
+        };
+        this.post(this.submitNewEventUrl, data, (data)=>{
+            callback();
+        });
+    }
+
+    post(url, data, success){
+        $.post(url, data, (data, textStatus)=>{
             if(textStatus != "success"){
                 throw new Error("サーバーとの通信に失敗しました。 status: {0}".format(textStatus));
             }
@@ -248,6 +267,9 @@ class Timetable{
         for(var week = 0; week < 5; week++){
             var day = this.days[week];
             for(var period = 0; period < 3; period++){
+                if(day == undefined){
+                    console.log(this.days);
+                }
                 $("#table{0}w{1}p{2}".format(this.uniqueId, week, period))
                     .text(day.periods[period].subject.name);
             }
@@ -326,7 +348,7 @@ class Timetable{
         var results = [];
         while(this.eventsData[i]){
             var current = this.eventsData[i];
-            if(current.date.isSame(date, "day") && current.subjectId == subjectId){
+            if(current.date.isSame(date, "day") && current.subject.id == subjectId){
                 results.push(current);
             }
             i++;
