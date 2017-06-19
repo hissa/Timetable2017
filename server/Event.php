@@ -8,8 +8,8 @@ class Event{
     public $EventType;
     public $Text;
 
-    public function __construct($id, $date, $subject, $eventType, $text = null){
-        $this->Id = (int)$id;
+    public function __construct($id = null, $date, $subject, $eventType, $text = null){
+        $this->Id = is_null($id) ? null : (int)$id;
         $this->Date = gettype($date) == "object" ? 
             $date : Carbon::parse($date);
         $this->Subject = $subject;
@@ -69,5 +69,21 @@ class Event{
             "eventtype" => $this->EventType,
             "text" => $this->Text
         ];
+    }
+
+    public function AddToDatabase(){
+        if(!is_null($this->Id)){
+            throw new Exception("IdがセットされたEventをDBに追加することはできません。");
+        }
+        $pdo = Database::getPdoObject();
+        $sql = "insert into events(date, subject_id, event_type, text)".
+                "values(?, ?, ?, ?)";
+        $stmt = $pdo->prepare($sql);
+        $stmt -> execute([
+            $this->Date->format("Y-m-d"),
+            $this->Subject->Id,
+            $this->EventType,
+            $this->Text
+        ]);
     }
 }

@@ -1,4 +1,5 @@
 <?php
+use Carbon\Carbon;
 class Timetable{
     protected static $WeeksCount = 5;
     protected static $ClassesCount = 3;
@@ -72,5 +73,10 @@ class Timetable{
         $events = static::GetEventListString($start, $end);
         $json = json_encode($events, JSON_UNESCAPED_UNICODE);
         return $json;
+    }
+
+    public static function SubmitNewEvent($date, $subjectId, $eventType, $text){
+        $newEvent = new Event(null, Carbon::parse($date), new Subject($subjectId), $eventType, $text);
+        $newEvent->AddToDatabase();
     }
 }
