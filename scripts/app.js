@@ -261,6 +261,7 @@ class Timetable{
         }
         this.setSubjectNames();
         this.setEvents();
+        this.setClickEvents();
     }
 
     setSubjectNames(shortName = false){
@@ -286,6 +287,21 @@ class Timetable{
                 }
             }
         }
+    }
+
+    setClickEvents(){
+        for(var week = 0; week < 5; week++){
+            for(var period = 0; period < 3; period++){
+                $("#table{0}w{1}p{2}".format(this.uniqueId, week, period))
+                    .off("click").on("click", {week: week, period: period}, (e)=>{
+                        this.cellClicked(e);
+                    });
+            }
+        }
+    }
+
+    cellClicked(e){
+        alert("week: {0}, period: {1}".format(e.data.week, e.data.period));
     }
 
     static getUniqueId(){
