@@ -48,6 +48,12 @@ class App{
             if(App.timetable.isContain(App.today)){
                 App.timetable.highlightDay(App.today);
             }
+            // Initialize popover of the Bootstrap
+            $('[data-toggle="popover"]').popover();
+            // 以下動いてない
+            $('[data-toggle="popover"]').on('hover', function (e) {
+                $('[data-toggle="popover"]').not(this).popover('hide');
+            });
         });
     }
 
@@ -262,6 +268,7 @@ class Timetable{
         this.setSubjectNames();
         this.setEvents();
         this.setClickEvents();
+        this.addPopovers(); 
     }
 
     setSubjectNames(shortName = false){
@@ -292,8 +299,14 @@ class Timetable{
     setClickEvents(){
         for(var week = 0; week < 5; week++){
             for(var period = 0; period < 3; period++){
+                var periodData = {
+                    weekNum: week,
+                    periodNum: period,
+                    period: this.days[week].periods[period]
+                    
+                };
                 $("#table{0}w{1}p{2}".format(this.uniqueId, week, period))
-                    .off("click").on("click", {week: week, period: period}, (e)=>{
+                    .off("click").on("click", periodData, (e)=>{
                         this.cellClicked(e);
                     });
             }
@@ -301,7 +314,8 @@ class Timetable{
     }
 
     cellClicked(e){
-        alert("week: {0}, period: {1}".format(e.data.week, e.data.period));
+        console.log("Clicked week: {0}, period: {1}".format(e.data.weekNum, e.data.periodNum));
+        console.log(e.data.period);
     }
 
     static getUniqueId(){
@@ -391,7 +405,7 @@ class Timetable{
     }
 
     clearHilightDay(){
-        this.doToAllCell((jqueryObj)=>{
+        this.doToAllCells((jqueryObj)=>{
             if(jqueryObj.hasClass("success")){
                 jqueryObj.removeClass("success");
             }
@@ -405,7 +419,7 @@ class Timetable{
         }
     }
 
-    doToAllCell(func){
+    doToAllCells(func){
         func($("#table{0}topleft".format(this.uniqueId)));
         for(var i = 0; i < 5; i++){
             func($("#table{0}week{1}".format(this.uniqueId, i)));
@@ -414,6 +428,22 @@ class Timetable{
                 func($("#table{0}numhead{1}".format(this.uniqueId, j + 1)));
             }
         }
+    }
+
+    doToPeriodCells(func){
+        for(var i = 0; i < 5; i++){
+            for(var j = 0; j < 3; j++){
+                func($("#table{0}w{1}p{2}".format(this.uniqueId, i, j)),
+                        i, j);
+            }
+        }
+    }
+
+    addPopovers(){
+        this.doToPeriodCells((jqueryObj, week, period)=>{
+            var popover = new TimetablePopover(this.days[week].periods[period]);
+            popover.addPopover(jqueryObj);
+        })
     }
 
     getWeekNumber(date){
@@ -458,6 +488,26 @@ class Timetable{
                             this.eventsData[i].text));
             i++;
         }
+    }
+}
+
+class TimetablePopover{
+    constructor(period){
+        this.period = period;
+        this.title = "Popover";
+        this.content = "testtest";
+    }
+
+    addPopover(jqueryObj){
+        var attrData = {
+            "data-toggle": "popover",
+            "title": this.title,
+            "data-content": this.content,
+            "data-placement": "bottom",
+            "data-html": "true",
+            "data-container": "body"
+        };
+        jqueryObj.attr(attrData);
     }
 }
 
