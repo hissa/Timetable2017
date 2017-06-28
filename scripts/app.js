@@ -9,6 +9,15 @@ class App{
         App.showPagination();
     }
 
+    static initializePopovers(){
+        // Initialize popover of the Bootstrap
+        $('[data-toggle="popover"]').popover();
+        // ポップオーバーが開かれた時に他のポップオーバーを閉じる。
+        $('[data-toggle="popover"]').on('show.bs.popover', function (e) {
+            $('[data-toggle="popover"]').not(this).popover('hide');
+        });
+    }
+
     static getToday(date = null){
         date = date == null ? moment() : date;
         if(date.format("H") >= App.hourOfNextDay){
@@ -48,12 +57,7 @@ class App{
             if(App.timetable.isContain(App.today)){
                 App.timetable.highlightDay(App.today);
             }
-            // Initialize popover of the Bootstrap
-            $('[data-toggle="popover"]').popover();
-            // 以下動いてない
-            $('[data-toggle="popover"]').on('hover', function (e) {
-                $('[data-toggle="popover"]').not(this).popover('hide');
-            });
+            App.initializePopovers();
         });
     }
 
@@ -63,18 +67,25 @@ class App{
     }
 
     static addShowingWeek(num = 1){
+        App.closeAllPopover();
         App.showingWeek += num;
         App.showTimetable();
     }
 
     static subtractShowingWeek(num = 1){
+        App.closeAllPopover();
         App.showingWeek -= num;
         App.showTimetable();
     }
 
     static setZeroShowingWeek(){
+        App.closeAllPopover();
         App.showingWeek = 0;
         App.showTimetable();
+    }
+
+    static closeAllPopover(){
+        $('[data-toggle="popover"]').popover('hide');
     }
 }
 
@@ -494,8 +505,21 @@ class Timetable{
 class TimetablePopover{
     constructor(period){
         this.period = period;
-        this.title = "Popover";
-        this.content = "testtest";
+        this.title = period.subject.name;
+        this.content = TimetablePopover.makeContent(this.period);
+    }
+
+    static makeContent(period){
+        console.log(period);
+        var content = "";
+        if(period.event != null){
+            content += "<table class=\"table\">";
+            content += "<tr><td>{0}</td><td>{1}</td></tr>"
+                .format(period.event.eventTypeForShow, period.event.text);
+            content += "</table>";
+        }
+        content += "<button class=\"btn btn-default\">イベントを追加</button>";
+        return content;
     }
 
     addPopover(jqueryObj){
@@ -558,8 +582,14 @@ class Event{
         this.id = id;
         this.date = date;
         this.eventType = eventType;
+        this.eventTypeForShow = Event.getEventTypeForShow(eventType);
         this.subject = subject;
         this.text = text;
+    }
+
+    static getEventTypeForShow(eventType){
+        var et = eventType;
+        return et == "watch" ? "放送視聴" : et == "report" ? "レポート" : "その他";
     }
 
     static parse(data){
