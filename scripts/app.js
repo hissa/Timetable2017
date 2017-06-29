@@ -57,19 +57,19 @@ class App{
     }
 
     static addShowingWeek(num = 1){
-        App.closeAllPopover();
+        // App.closeAllPopover();
         App.showingWeek += num;
         App.showTimetable();
     }
 
     static subtractShowingWeek(num = 1){
-        App.closeAllPopover();
+        // App.closeAllPopover();
         App.showingWeek -= num;
         App.showTimetable();
     }
 
     static setZeroShowingWeek(){
-        App.closeAllPopover();
+        // App.closeAllPopover();
         App.showingWeek = 0;
         App.showTimetable();
     }
@@ -298,20 +298,20 @@ class Timetable{
                 var periodData = {
                     weekNum: week,
                     periodNum: period,
+                    date: this.days[week].date,
                     period: this.days[week].periods[period]
                     
                 };
                 $("#table{0}w{1}p{2}".format(this.uniqueId, week, period))
                     .off("click").on("click", periodData, (e)=>{
-                        this.cellClicked(e);
+                        console.log("Clicked week: {0}, period: {1}".format(e.data.weekNum, e.data.periodNum));
+                        console.log(e.data.period);
+                        var modal = new TimetableModal(e.data.date, e.data.period);
+                        modal.make($("#modals"));
+                        modal.show();
                     });
             }
         }
-    }
-
-    cellClicked(e){
-        console.log("Clicked week: {0}, period: {1}".format(e.data.weekNum, e.data.periodNum));
-        console.log(e.data.period);
     }
 
     static getUniqueId(){
@@ -477,6 +477,94 @@ class Timetable{
                             this.eventsData[i].text));
             i++;
         }
+    }
+}
+
+class TimetableModal{
+    constructor(date, period){
+        this.date = date;
+        this.period = period;
+        this.uniqueId = TimetableModal.getUniqueId();
+        this.idName = "timetableModal{0}".format(this.uniqueId);
+        this.title = this.period.subject.name;
+    }
+
+    make(ModalsJqueryObj){
+        ModalsJqueryObj.append("<div id=\"{0}\" />".format(this.idName));
+        $("#{0}".format(this.idName))
+            .addClass("modal fade")
+            .attr({"tabindex": "-1"})
+            .append("<div id=\"{0}dialog\" />".format(this.idName));
+        $("#{0}dialog".format(this.idName))
+            .addClass("modal-dialog")
+            .append("<div id=\"{0}content\" />".format(this.idName));
+        $("#{0}content".format(this.idName))
+            .addClass("modal-content")
+            .append("<div id=\"{0}header\" />".format(this.idName))
+            .append("<div id=\"{0}body\" />".format(this.idName))
+            .append("<div id=\"{0}footer\" />".format(this.idName));
+        this.makeHeader($("#{0}header".format(this.idName)));
+        this.makeBody($("#{0}body".format(this.idName)));
+        this.makeFooter($("#{0}footer".format(this.idName)));
+        
+    }
+
+    makeHeader(jqueryObj){
+        jqueryObj
+            .addClass("modal-header")
+            .append(this.title)
+            .append("<button id=\"{0}closeButton\" />".format(this.idName));
+        $("#{0}closeButton".format(this.idName))
+            .addClass("close")
+            .attr({
+                "type": "button",
+                "data-dismiss": "modal"
+            })
+            .append("<span>×</span>");
+    }
+
+    makeBody(jqueryObj){
+        jqueryObj
+            .addClass("modal-body")
+            .append("<table id=\"{0}eventlist\" />".format(this.idName));
+        var eventlistTable = $("#{0}eventlist".format(this.idName));
+        eventlistTable.addClass("table");
+        // TODO: 複数のイベントに対応する
+        if(this.period.event != null){
+            eventlistTable
+                .append("<tr><td>{0}</td><td>{1}</td></tr>"
+                    .format(this.period.event.eventTypeForShow, this.period.event.text));
+        }
+    }
+
+    makeFooter(jqueryObj){
+        jqueryObj
+            .addClass("modal-footer")
+            .append("<button id=\"{0}addEventButton\" />".format(this.idName));
+        $("#{0}addEventButton".format(this.idName))
+            .addClass("btn btn-primary")
+            .append("イベントを追加");
+    }
+
+    show(){
+        $("#{0}".format(this.idName)).modal("show");
+    }
+
+    hide(){
+        $("#{0}".format(this.idName)).modal("hide");
+    }
+
+    destroy(){
+        $("#{0}".format(this.idName)).remove();
+    }
+
+    static getUniqueId(){
+        if(TimetableModal.usedUniqueId == null){
+            TimetableModal.usedUniqueId = 0;
+        }
+        var toUse = TimetableModal.usedUniqueId;
+        TimetableModal.usedUniqueId++;
+        return toUse;
     }
 }
 
