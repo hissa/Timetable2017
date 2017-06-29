@@ -264,7 +264,6 @@ class Timetable{
         }
         this.setSubjectNames();
         this.setEvents();
-        this.setClickEvents();
     }
 
     setSubjectNames(shortName = false){
@@ -290,28 +289,6 @@ class Timetable{
                 }
             }
         }
-    }
-
-    setClickEvents(){
-        for(var week = 0; week < 5; week++){
-            for(var period = 0; period < 3; period++){
-                var periodData = {
-                    weekNum: week,
-                    periodNum: period,
-                    period: this.days[week].periods[period]
-                    
-                };
-                $("#table{0}w{1}p{2}".format(this.uniqueId, week, period))
-                    .off("click").on("click", periodData, (e)=>{
-                        this.cellClicked(e);
-                    });
-            }
-        }
-    }
-
-    cellClicked(e){
-        console.log("Clicked week: {0}, period: {1}".format(e.data.weekNum, e.data.periodNum));
-        console.log(e.data.period);
     }
 
     static getUniqueId(){
