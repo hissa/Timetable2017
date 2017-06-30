@@ -43,6 +43,15 @@ class App{
             .format(start.format("YYYY-MM-DD"), end.format("YYYY-MM-DD")));
         App.timetable = new Timetable(start, end, ()=>{
             App.removeShowing();
+            App.timetable.setAddEventEvent((date, subject, eventType, text)=>{
+                text = text == undefined ?  null : text;
+                var event = new Event(null, date, eventType, subject, text);
+                var accesser = new ServerAccesser();
+                accesser.submitNewEvent(event, ()=>{
+                    App.showTimetable();
+                    console.log("submitted");
+                });
+            });
             App.timetable.makeTimetable($("#timetable"));
             App.timetable.makeEventList($("#eventlist"));
             if(App.timetable.isContain(App.today)){
@@ -308,10 +317,17 @@ class Timetable{
                         console.log(e.data.period);
                         var modal = new TimetableModal(e.data.date, e.data.period);
                         modal.make($("#modals"));
+                        if(this.addEventEvent != undefined){
+                            modal.setAddEventEvent(this.addEventEvent);
+                        }
                         modal.show();
                     });
             }
         }
+    }
+
+    setAddEventEvent(func){
+        this.addEventEvent = func;
     }
 
     static getUniqueId(){
@@ -570,7 +586,7 @@ class TimetableModal{
         return toUse;
     }
     
-    addAddEventEvent(func){
+    setAddEventEvent(func){
         this.addEventFunc = func;
     }
 
@@ -584,9 +600,12 @@ class TimetableModal{
                 this.deligateAddEventForm();
                 if(this.addEventFunc != undefined){
                     this.addEventFunc(
+                        this.date,
+                        this.period.subject,
                         $("[name={0}typeRadios]:checked".format(this.idName)).val(),
                         $("#{0}textboxInput".format(this.idName)).val()
                     );
+                    this.hide();
                 }
             });
     }
