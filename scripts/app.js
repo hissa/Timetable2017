@@ -9,15 +9,6 @@ class App{
         App.showPagination();
     }
 
-    static initializePopovers(){
-        // Initialize popover of the Bootstrap
-        $('[data-toggle="popover"]').popover();
-        // ポップオーバーが開かれた時に他のポップオーバーを閉じる。
-        $('[data-toggle="popover"]').on('show.bs.popover', function (e) {
-            $('[data-toggle="popover"]').not(this).popover('hide');
-        });
-    }
-
     static getToday(date = null){
         date = date == null ? moment() : date;
         if(date.format("H") >= App.hourOfNextDay){
@@ -52,12 +43,20 @@ class App{
             .format(start.format("YYYY-MM-DD"), end.format("YYYY-MM-DD")));
         App.timetable = new Timetable(start, end, ()=>{
             App.removeShowing();
+            App.timetable.setAddEventEvent((date, subject, eventType, text)=>{
+                text = text == undefined ?  null : text;
+                var event = new Event(null, date, eventType, subject, text);
+                var accesser = new ServerAccesser();
+                accesser.submitNewEvent(event, ()=>{
+                    App.showTimetable();
+                    console.log("submitted");
+                });
+            });
             App.timetable.makeTimetable($("#timetable"));
             App.timetable.makeEventList($("#eventlist"));
             if(App.timetable.isContain(App.today)){
                 App.timetable.highlightDay(App.today);
             }
-            App.initializePopovers();
         });
     }
 
@@ -67,25 +66,21 @@ class App{
     }
 
     static addShowingWeek(num = 1){
-        App.closeAllPopover();
+        // App.closeAllPopover();
         App.showingWeek += num;
         App.showTimetable();
     }
 
     static subtractShowingWeek(num = 1){
-        App.closeAllPopover();
+        // App.closeAllPopover();
         App.showingWeek -= num;
         App.showTimetable();
     }
 
     static setZeroShowingWeek(){
-        App.closeAllPopover();
+        // App.closeAllPopover();
         App.showingWeek = 0;
         App.showTimetable();
-    }
-
-    static closeAllPopover(){
-        $('[data-toggle="popover"]').popover('hide');
     }
 }
 
@@ -279,7 +274,6 @@ class Timetable{
         this.setSubjectNames();
         this.setEvents();
         this.setClickEvents();
-        this.addPopovers(); 
     }
 
     setSubjectNames(shortName = false){
@@ -313,20 +307,27 @@ class Timetable{
                 var periodData = {
                     weekNum: week,
                     periodNum: period,
+                    date: this.days[week].date,
                     period: this.days[week].periods[period]
                     
                 };
                 $("#table{0}w{1}p{2}".format(this.uniqueId, week, period))
                     .off("click").on("click", periodData, (e)=>{
-                        this.cellClicked(e);
+                        console.log("Clicked week: {0}, period: {1}".format(e.data.weekNum, e.data.periodNum));
+                        console.log(e.data.period);
+                        var modal = new TimetableModal(e.data.date, e.data.period);
+                        modal.make($("#modals"));
+                        if(this.addEventEvent != undefined){
+                            modal.setAddEventEvent(this.addEventEvent);
+                        }
+                        modal.show();
                     });
             }
         }
     }
 
-    cellClicked(e){
-        console.log("Clicked week: {0}, period: {1}".format(e.data.weekNum, e.data.periodNum));
-        console.log(e.data.period);
+    setAddEventEvent(func){
+        this.addEventEvent = func;
     }
 
     static getUniqueId(){
@@ -450,13 +451,6 @@ class Timetable{
         }
     }
 
-    addPopovers(){
-        this.doToPeriodCells((jqueryObj, week, period)=>{
-            var popover = new TimetablePopover(this.days[week].periods[period]);
-            popover.addPopover(jqueryObj);
-        })
-    }
-
     getWeekNumber(date){
         var dayNum = null;
         for(var day = 0; day < 5; day++){
@@ -502,36 +496,186 @@ class Timetable{
     }
 }
 
-class TimetablePopover{
-    constructor(period){
+class TimetableModal{
+    constructor(date, period){
+        this.date = date;
         this.period = period;
-        this.title = period.subject.name;
-        this.content = TimetablePopover.makeContent(this.period);
+        this.uniqueId = TimetableModal.getUniqueId();
+        this.idName = "timetableModal{0}".format(this.uniqueId);
+        this.title = this.period.subject.name;
     }
 
-    static makeContent(period){
-        console.log(period);
-        var content = "";
-        if(period.event != null){
-            content += "<table class=\"table\">";
-            content += "<tr><td>{0}</td><td>{1}</td></tr>"
-                .format(period.event.eventTypeForShow, period.event.text);
-            content += "</table>";
+    make(ModalsJqueryObj){
+        ModalsJqueryObj.append("<div id=\"{0}\" />".format(this.idName));
+        $("#{0}".format(this.idName))
+            .addClass("modal fade")
+            .attr({"tabindex": "-1"})
+            .append("<div id=\"{0}dialog\" />".format(this.idName));
+        $("#{0}dialog".format(this.idName))
+            .addClass("modal-dialog")
+            .append("<div id=\"{0}content\" />".format(this.idName));
+        $("#{0}content".format(this.idName))
+            .addClass("modal-content")
+            .append("<div id=\"{0}header\" />".format(this.idName))
+            .append("<div id=\"{0}body\" />".format(this.idName))
+            .append("<div id=\"{0}footer\" />".format(this.idName));
+        this.makeHeader($("#{0}header".format(this.idName)));
+        this.makeBody($("#{0}body".format(this.idName)));
+        this.makeFooter($("#{0}footer".format(this.idName)));
+        
+    }
+
+    makeHeader(jqueryObj){
+        jqueryObj
+            .addClass("modal-header")
+            .append(this.title)
+            .append("<button id=\"{0}closeButton\" />".format(this.idName));
+        $("#{0}closeButton".format(this.idName))
+            .addClass("close")
+            .attr({
+                "type": "button",
+                "data-dismiss": "modal"
+            })
+            .append("<span>×</span>");
+    }
+
+    makeBody(jqueryObj){
+        jqueryObj
+            .addClass("modal-body")
+            .append("<table id=\"{0}eventlist\" />".format(this.idName));
+        var eventlistTable = $("#{0}eventlist".format(this.idName));
+        eventlistTable.addClass("table");
+        // TODO: 複数のイベントに対応する
+        if(this.period.event != null){
+            eventlistTable
+                .append("<tr><td>{0}</td><td>{1}</td></tr>"
+                    .format(this.period.event.eventTypeForShow, this.period.event.text));
         }
-        content += "<button class=\"btn btn-default\">イベントを追加</button>";
-        return content;
     }
 
-    addPopover(jqueryObj){
-        var attrData = {
-            "data-toggle": "popover",
-            "title": this.title,
-            "data-content": this.content,
-            "data-placement": "bottom",
-            "data-html": "true",
-            "data-container": "body"
-        };
-        jqueryObj.attr(attrData);
+    makeFooter(jqueryObj){
+        jqueryObj
+            .addClass("modal-footer")
+            .append("<button id=\"{0}closeModalButton\" />".format(this.idName))
+            .append("<button id=\"{0}addEventButton\" />".format(this.idName));
+        $("#{0}addEventButton".format(this.idName))
+            .addClass("btn btn-primary")
+            .append("イベントを追加")
+            .on("click", (e)=>{
+                this.makeAddEventForm();
+            });
+        $("#{0}closeModalButton".format(this.idName))
+            .addClass("btn btn-default")
+            .append("閉じる")
+            .on("click", (e)=>{
+                this.hide();
+            });
+    }
+
+    show(){
+        $("#{0}".format(this.idName)).modal("show");
+    }
+
+    hide(){
+        $("#{0}".format(this.idName)).modal("hide");
+    }
+
+    destroy(){
+        $("#{0}".format(this.idName)).remove();
+    }
+
+    static getUniqueId(){
+        if(TimetableModal.usedUniqueId == null){
+            TimetableModal.usedUniqueId = 0;
+        }
+        var toUse = TimetableModal.usedUniqueId;
+        TimetableModal.usedUniqueId++;
+        return toUse;
+    }
+    
+    setAddEventEvent(func){
+        this.addEventFunc = func;
+    }
+
+    makeAddEventForm(){
+        this.makeAddEventFormBody($("#{0}body".format(this.idName)));
+        $("#{0}addEventButton".format(this.idName))
+            .off("click")
+            .on("click", (e)=>{
+                console.log($("[name={0}typeRadios]:checked".format(this.idName)).val());
+                console.log($("#{0}textboxInput".format(this.idName)).val());
+                this.deligateAddEventForm();
+                if(this.addEventFunc != undefined){
+                    this.addEventFunc(
+                        this.date,
+                        this.period.subject,
+                        $("[name={0}typeRadios]:checked".format(this.idName)).val(),
+                        $("#{0}textboxInput".format(this.idName)).val()
+                    );
+                    this.hide();
+                }
+            });
+    }
+
+    deligateAddEventForm(){
+        if($("[name={0}typeRadios]:checked".format(this.idName)).val() == undefined){
+            $("#{0}eventTypeRadiosFormGroup".format(this.idName))
+                .addClass("has-error");
+        }else{
+            $("#{0}eventTypeRadiosFormGroup".format(this.idName))
+                .removeClass("has-error");
+        }
+    }
+
+    makeAddEventFormBody(jqueryObj){
+        jqueryObj
+            .empty()
+            .append("<div id=\"{0}eventTypeRadiosFormGroup\" />".format(this.idName))
+            .append("<div id=\"{0}textFormGroup\" />".format(this.idName));
+        $("#{0}eventTypeRadiosFormGroup".format(this.idName))
+            .append("<label id=\"{0}eventTypeRadiosLabel\">課題の種類</label>"
+                .format(this.idName))
+            .append("<div id=\"{0}radioReport\" />".format(this.idName))
+            .append("<div id=\"{0}radioWatch\" />".format(this.idName))
+            .append("<div id=\"{0}radioOther\" />".format(this.idName));
+        var radiosCommonAttr = {
+            "type": "radio",
+            "name": "{0}typeRadios".format(this.idName),
+        }
+        $("#{0}radioReport".format(this.idName))
+            .addClass("radio")
+            .append("<label><input id=\"{0}inputRadioReport\">レポート</label>"
+                .format(this.idName));
+        $("#{0}inputRadioReport".format(this.idName))
+            .attr({ "value": "report" })
+            .attr(radiosCommonAttr);
+        $("#{0}radioWatch".format(this.idName))
+            .addClass("radio")
+            .append("<label><input id=\"{0}inputRadioWatch\">放送視聴</label>"
+                .format(this.idName));
+        $("#{0}inputRadioWatch".format(this.idName))
+            .attr({ "value": "watch" })
+            .attr(radiosCommonAttr);
+        $("#{0}radioOther".format(this.idName))
+            .addClass("radio")
+            .append("<label><input id=\"{0}inputRadioOther\">その他</label>"
+                .format(this.idName));
+        $("#{0}inputRadioOther".format(this.idName))
+            .attr({ "value": "other" })
+            .attr(radiosCommonAttr);
+        $("#{0}textFormGroup".format(this.idName))
+            .addClass("form-group")
+            .append("<label id=\"{0}textboxLabel\" />".format(this.idName))
+            .append("<input id=\"{0}textboxInput\">".format(this.idName));
+        $("#{0}textboxLabel".format(this.idName))
+            .attr({ "for": "{0}textboxInput".format(this.idName) })
+            .text("追加情報");
+        $("#{0}textboxInput".format(this.idName))
+            .addClass("form-control")
+            .attr({
+                "type": "text",
+                "placeholder": "追加の情報があれば記入してください。"
+            });
     }
 }
 
