@@ -556,12 +556,19 @@ class TimetableModal{
     makeFooter(jqueryObj){
         jqueryObj
             .addClass("modal-footer")
+            .append("<button id=\"{0}closeModalButton\" />".format(this.idName))
             .append("<button id=\"{0}addEventButton\" />".format(this.idName));
         $("#{0}addEventButton".format(this.idName))
             .addClass("btn btn-primary")
             .append("イベントを追加")
             .on("click", (e)=>{
                 this.makeAddEventForm();
+            });
+        $("#{0}closeModalButton".format(this.idName))
+            .addClass("btn btn-default")
+            .append("閉じる")
+            .on("click", (e)=>{
+                this.hide();
             });
     }
 
