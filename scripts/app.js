@@ -543,7 +543,10 @@ class TimetableModal{
             .append("<button id=\"{0}addEventButton\" />".format(this.idName));
         $("#{0}addEventButton".format(this.idName))
             .addClass("btn btn-primary")
-            .append("イベントを追加");
+            .append("イベントを追加")
+            .on("click", (e)=>{
+                this.makeAddEventForm();
+            });
     }
 
     show(){
@@ -565,6 +568,88 @@ class TimetableModal{
         var toUse = TimetableModal.usedUniqueId;
         TimetableModal.usedUniqueId++;
         return toUse;
+    }
+    
+    addAddEventEvent(func){
+        this.addEventFunc = func;
+    }
+
+    makeAddEventForm(){
+        this.makeAddEventFormBody($("#{0}body".format(this.idName)));
+        $("#{0}addEventButton".format(this.idName))
+            .off("click")
+            .on("click", (e)=>{
+                console.log($("[name={0}typeRadios]:checked".format(this.idName)).val());
+                console.log($("#{0}textboxInput".format(this.idName)).val());
+                this.deligateAddEventForm();
+                if(this.addEventFunc != undefined){
+                    this.addEventFunc(
+                        $("[name={0}typeRadios]:checked".format(this.idName)).val(),
+                        $("#{0}textboxInput".format(this.idName)).val()
+                    );
+                }
+            });
+    }
+
+    deligateAddEventForm(){
+        if($("[name={0}typeRadios]:checked".format(this.idName)).val() == undefined){
+            $("#{0}eventTypeRadiosFormGroup".format(this.idName))
+                .addClass("has-error");
+        }else{
+            $("#{0}eventTypeRadiosFormGroup".format(this.idName))
+                .removeClass("has-error");
+        }
+    }
+
+    makeAddEventFormBody(jqueryObj){
+        jqueryObj
+            .empty()
+            .append("<div id=\"{0}eventTypeRadiosFormGroup\" />".format(this.idName))
+            .append("<div id=\"{0}textFormGroup\" />".format(this.idName));
+        $("#{0}eventTypeRadiosFormGroup".format(this.idName))
+            .append("<label id=\"{0}eventTypeRadiosLabel\">課題の種類</label>"
+                .format(this.idName))
+            .append("<div id=\"{0}radioReport\" />".format(this.idName))
+            .append("<div id=\"{0}radioWatch\" />".format(this.idName))
+            .append("<div id=\"{0}radioOther\" />".format(this.idName));
+        var radiosCommonAttr = {
+            "type": "radio",
+            "name": "{0}typeRadios".format(this.idName),
+        }
+        $("#{0}radioReport".format(this.idName))
+            .addClass("radio")
+            .append("<label><input id=\"{0}inputRadioReport\">レポート</label>"
+                .format(this.idName));
+        $("#{0}inputRadioReport".format(this.idName))
+            .attr({ "value": "report" })
+            .attr(radiosCommonAttr);
+        $("#{0}radioWatch".format(this.idName))
+            .addClass("radio")
+            .append("<label><input id=\"{0}inputRadioWatch\">放送視聴</label>"
+                .format(this.idName));
+        $("#{0}inputRadioWatch".format(this.idName))
+            .attr({ "value": "watch" })
+            .attr(radiosCommonAttr);
+        $("#{0}radioOther".format(this.idName))
+            .addClass("radio")
+            .append("<label><input id=\"{0}inputRadioOther\">その他</label>"
+                .format(this.idName));
+        $("#{0}inputRadioOther".format(this.idName))
+            .attr({ "value": "other" })
+            .attr(radiosCommonAttr);
+        $("#{0}textFormGroup".format(this.idName))
+            .addClass("form-group")
+            .append("<label id=\"{0}textboxLabel\" />".format(this.idName))
+            .append("<input id=\"{0}textboxInput\">".format(this.idName));
+        $("#{0}textboxLabel".format(this.idName))
+            .attr({ "for": "{0}textboxInput".format(this.idName) })
+            .text("追加情報");
+        $("#{0}textboxInput".format(this.idName))
+            .addClass("form-control")
+            .attr({
+                "type": "text",
+                "placeholder": "追加の情報があれば記入してください。"
+            });
     }
 }
 
