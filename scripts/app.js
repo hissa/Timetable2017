@@ -505,8 +505,8 @@ class TimetableModal{
         this.title = this.period.subject.name;
     }
 
-    make(ModalsJqueryObj){
-        ModalsJqueryObj.append("<div id=\"{0}\" />".format(this.idName));
+    make(modalsJqueryObj){
+        modalsJqueryObj.append("<div id=\"{0}\" />".format(this.idName));
         $("#{0}".format(this.idName))
             .addClass("modal fade")
             .attr({"tabindex": "-1"})
@@ -522,7 +522,6 @@ class TimetableModal{
         this.makeHeader($("#{0}header".format(this.idName)));
         this.makeBody($("#{0}body".format(this.idName)));
         this.makeFooter($("#{0}footer".format(this.idName)));
-        
     }
 
     makeHeader(jqueryObj){
@@ -676,6 +675,122 @@ class TimetableModal{
                 "type": "text",
                 "placeholder": "追加の情報があれば記入してください。"
             });
+    }
+}
+
+class LoginModal{
+    constructor(loginFunc){
+        this.loginFunc = loginFunc;
+    }
+
+    make(modalsJqueryObj){
+        modalsJqueryObj
+            .append("<div id=\"loginModal\" />");
+        $("#loginModal")
+            .addClass("modal fade")
+            .attr({ "tabindex": "-1" })
+            .append("<div id=\"loginModalDialog\" />");
+        $("#loginModalDialog")
+            .addClass("modal-dialog")
+            .append("<div id=\"loginModalContent\" />");
+        $("#loginModalContent")
+            .addClass("modal-content")
+            .append("<div id=\"loginModalHeader\" />")
+            .append("<div id=\"loginModalBody\" />")
+            .append("<div id=\"loginModalFooter\" />");
+        this.makeHeader($("#loginModalHeader"));
+        this.makeBody($("#loginModalBody"));
+        this.makeFooter($("#loginModalFooter"));
+    }
+
+    makeHeader(jqueryObj){
+        jqueryObj
+            .addClass("modal-header")
+            .append("<button id=\"loginModalCloseButton\" />")
+            .append("ログイン");
+        $("#loginModalCloseButton")
+            .addClass("close")
+            .attr({
+                "type": "close",
+                "data-dismiss": "modal"
+            })
+            .append("<span>×</span>");
+    }
+
+    makeBody(jqueryObj){
+        jqueryObj
+            .empty()
+            .addClass("modal-body")
+            .append("<div id=\"loginModalIdFormGroup\" />")
+            .append("<div id=\"loginModalPasswordFormGroup\" />")
+            .append("<div id=\"loginModalSaveCheckbox\" />");
+        $("#loginModalIdFormGroup")
+            .addClass("form-group")
+            .append("<label id=\"loginModalIdLabel\" />")
+            .append("<input id=\"loginModalIdInput\" />");
+        $("#loginModalIdLabel")
+            .attr({ "for": "loginModalIdInput" })
+            .text("ID");
+        $("#loginModalIdInput")
+            .attr({
+                "type": "text",
+                "placeholder": "IDを入力してください。"
+            })
+            .addClass("form-control");
+        $("#loginModalPasswordFormGroup")
+            .addClass("form-group")
+            .append("<label id=\"loginModalPasswordLabel\" />")
+            .append("<input id=\"loginModalPasswordInput\" />");
+        $("#loginModalPasswordLabel")
+            .attr({ "for": "loginModalPasswordInput" })
+            .text("パスワード");
+        $("#loginModalPasswordInput")
+            .attr({
+                "type": "password",
+                "placeholder": "パスワードを入力してください。"
+            })
+            .addClass("form-control");
+        $("#loginModalSaveCheckbox")
+            .append("<label id=\"loginModalSaveLabel\" />");
+        $("#loginModalSaveLabel")
+            .append("<input id=\"loginModalSaveCheckboxInput\" />")
+            .append("ログイン状態を保存");
+        $("#loginModalSaveCheckboxInput")
+            .attr({
+                "type": "checkbox",
+                "value": "saveLogedIn"
+            });
+    }
+
+    makeFooter(jqueryObj){
+        jqueryObj
+            .addClass("modal-footer")
+            .append("<button id=\"loginModalFooterCloseButton\" />")
+            .append("<button id=\"loginModalLoginButton\" />");
+        $("#loginModalLoginButton")
+            .addClass("btn btn-primary")
+            .append("ログイン")
+            .on("click", (e)=>{
+                this.loginFunc();
+            });
+        $("#loginModalFooterCloseButton")
+            .addClass("btn btn-default")
+            .append("閉じる")
+            .on("click", (e)=>{
+                this.hide();
+            });
+    }
+
+    show(){
+        $("#loginModal").modal("show");
+    }
+
+    hide(){
+        $("#loginModal").modal("hide");
+    }
+
+    destroy(){
+        $("#loginModal").remove();
     }
 }
 
