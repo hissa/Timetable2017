@@ -97,4 +97,12 @@ class User{
         $canLogin = password_verify($password, $hashedPassword);
         return $canLogin;
     }
+
+    static function writeLoginLog($userId, $accessId, $success = true){
+        $pdo = Database::getPdoObject();
+        $sql = "insert into user_login_log(user_id, access_id, date_time, success) ".
+                "values(?, ?, ?, ?);";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$userId, $accessId, Carbon::now("Asia/Tokyo"), $success]);
+    }
 }

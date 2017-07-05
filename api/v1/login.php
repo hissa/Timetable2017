@@ -10,7 +10,7 @@ $inputPassword = "test";
 // $user = new User($inputId);
 // $user->login($inputPassword);
 // var_dump($user);
-$accessId = "8";
+$accessId = "7";
 $accessKey = "$2y$10$2k/.AqwYV87vnaOSJGH1Q.tKggWQ7mcrhLjZ/jK50KHPN9Au4JAEC";
 $user = new User($inputId);
 $user->access($accessId, $accessKey);
