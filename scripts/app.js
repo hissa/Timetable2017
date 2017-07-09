@@ -1,12 +1,27 @@
 class App{
 
     static main(){
+        App.makeNavbar();
         App.showingWeek = 0;
         App.hourOfNextDay = 15;
         App.today = App.getToday();
         console.log("today: {0}".format(App.today.format("YYYY-MM-DD")));
         App.showTimetable();
         App.showPagination();
+    }
+
+    static makeNavbar(){
+        App.navbar = new NavigationBar($("#navbar"));
+        App.navbar.make();
+        App.navbar.title("WEB版時間割2017");
+        App.navbar.loginButtonFunction(()=>{
+            var loginForm = new LoginModal((data)=>{
+                console.log(data);
+                // いまここ
+            });
+            loginForm.make($("body"));
+            loginForm.show();
+        }); 
     }
 
     static getToday(date = null){
@@ -771,7 +786,12 @@ class LoginModal{
             .addClass("btn btn-primary")
             .append("ログイン")
             .on("click", (e)=>{
-                this.loginFunc();
+                var data = {
+                    id: $("#loginModalIdInput").val(),
+                    password: $("#loginModalPasswordInput").val(),
+                    enableAutoLogin: $("#loginModalSaveCheckboxInput").prop("checked")
+                }
+                this.loginFunc(data);
             });
         $("#loginModalFooterCloseButton")
             .addClass("btn btn-default")
@@ -858,6 +878,39 @@ class Event{
         var subject = Subject.parse(data["subject"]);
         var text = data["text"];
         return new Event(id, date, eventType, subject, text);
+    }
+}
+
+class NavigationBar{
+    constructor(jqueryObj){
+        this.navbarObject = jqueryObj;
+        this.loginButtonFunc = null;
+    }
+
+    make(){
+        this.navbarObject.append("<div id=\"navbarContainer\" />");
+        $("#navbarContainer")
+            .addClass("container-fluid")
+            .append("<div id=\"navbarHeader\" />")
+            .append("<div id=\"navbarCollapse\" />");
+        $("#navbarHeader")
+            .addClass("navbar-header")
+            .append("<span id=\"navbarTitle\" />");
+        $("#navbarTitle").addClass("navbar-brand");
+        $("#navbarCollapse")
+            .addClass("collapse navbar-collapse")
+            .append("<button id=\"navbarLoginButton\" />");
+        $("#navbarLoginButton")
+            .addClass("btn btn-default navbar-btn")
+            .text("ログイン");
+    }
+
+    title(title){
+        $("#navbarTitle").text(title);
+    }
+    
+    loginButtonFunction(func){
+        $("#navbarLoginButton").off("click").on("click", func);
     }
 }
 
