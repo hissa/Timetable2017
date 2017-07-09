@@ -1,15 +1,15 @@
 <?php
 require_once "../../server/User.php";
 require_once "../../server/Carbon/Carbon.php";
-// $inputId = $_POST["id"];
-// $inputPassword = $_POST["password"];
-// $enableAutoLogin =
-    // isset($_POST["enable_auto_login"]) ? (bool)$_POST["enable_auto_login"] : false;
-//debug
-$inputId = $_GET["id"];
-$inputPassword = $_GET["password"];
+$inputId = $_POST["id"];
+$inputPassword = $_POST["password"];
 $enableAutoLogin =
-    isset($_GET["enable_auto_login"]) ? (bool)$_GET["enable_auto_login"] : false;
+    isset($_POST["enable_auto_login"]) ? (bool)$_POST["enable_auto_login"] : false;
+//debug
+// $inputId = $_GET["id"];
+// $inputPassword = $_GET["password"];
+// $enableAutoLogin =
+//     isset($_GET["enable_auto_login"]) ? (bool)$_GET["enable_auto_login"] : false;
 
 $data = [];
 if(!User::isExistsId($inputId)){
@@ -41,23 +41,3 @@ if($enableAutoLogin){
     $data["auto_login_key"] = $keys["hashedAutoLoginKey"];
 }
 echo json_encode($data, JSON_UNESCAPED_UNICODE);
-
-// debug
-// $inputId = "hissa_tester";
-// $inputPassword = "test";
-// $usr = new User($inputId);
-// var_dump($usr->getAutoLoginKeys());
-// $accessId = "7";
-// $accessKey = "$2y$10$2k/.AqwYV87vnaOSJGH1Q.tKggWQ7mcrhLjZ/jK50KHPN9Au4JAEC";
-// $user = new User($inputId);
-// $user->access($accessId, $accessKey);
-// var_dump($user);
-// User::writeLoginLog("tester", 0);  
-// $id = "5962598db4a53";
-// $key = '$2y$10$BKrnwPdi.f9XIGH0mF4baOTj.Hh4DZd9mo2/oa18UY3k9zyrJsURK';
-// $usr = User::getUserFromAutoLoginId($id);
-// $usr->autoLogin($id, $key);
-// var_dump($usr);
-
-// Login (Return: AccessKey, AutoLoginKey)
-// Use transaction
