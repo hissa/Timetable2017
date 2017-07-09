@@ -1,4 +1,5 @@
 <?php
+error_reporting(E_ALL);
 require_once "Database.php";
 use Carbon\Carbon;
 class User{
@@ -29,6 +30,11 @@ class User{
         if(!$this->canLogin($password)){
             throw new Exception("パスワードが間違っています。");
         }
+        $this->loggedIn = true;
+        $this->makeAccessKey();
+    }
+
+    protected function forcedLogin(){
         $this->loggedIn = true;
         $this->makeAccessKey();
     }
@@ -65,7 +71,7 @@ class User{
         return isset($result[0][0]);
     }
 
-    private function makeAccessKey(){
+    protected function makeAccessKey(){
         $uniqId = uniqid();
         $expiration = Carbon::now("Asia/Tokyo")->addDay();
         $pdo = Database::getPdoObject();
@@ -98,7 +104,63 @@ class User{
         return $canLogin;
     }
 
-    static function writeLoginLog($userId, $accessId, $success = true){
+    public function getAutoLoginKeys(){
+        if(!$this->loggedIn){
+            throw new Exception("ログインしてください。");
+        }
+        $autoLoginId = uniqid();
+        $autoLoginKey = password_hash(uniqid(), PASSWORD_DEFAULT);
+        $expiration = Carbon::now("Asia/Tokyo")->addMonth();
+        $pdo = Database::getPdoObject();
+        $sql = "insert into auto_login_keys(auto_login_id, auto_login_key, user_id, expiration)".
+            " values(?,?,?,?);";
+        $stmt = $pdo->prepare($sql);
+        $r = $stmt->execute([$autoLoginId, $autoLoginKey, $this->id, $expiration]);
+        return [
+            "autoLoginId" => $autoLoginId,
+            "hashedAutoLoginKey" => password_hash($autoLoginKey, PASSWORD_DEFAULT)
+        ];
+    }
+
+    public function autoLogin($autoLoginId, $hashedKey){
+        if(!$this->canAutoLogin($autoLoginId, $hashedKey)){
+            throw new Exception("AutoLoginKeyが間違っています。");
+        }
+        $this->forcedLogin();
+        return $this->changeAutoLoginKey($autoLoginId);   
+    }
+
+    public function changeAutoLoginKey($autoLoginId){
+        if(is_null(static::getUserFromAutoLoginId($autoLoginId))){
+            throw new Exception("存在しないAutoLoginIdです。");
+        }
+        $newKey = password_hash(uniqid(), PASSWORD_DEFAULT);
+        $pdo = Database::getPdoObject();
+        $sql = "update auto_login_keys set auto_login_key=? where auto_login_id=?,expiration=?;";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$newKey, $autoLoginId, Carbon::now("Asia/Tokyo")->addMonth()]);
+        return password_hash($newKey, PASSWORD_DEFAULT);
+    }
+
+    public function canAutoLogin($autoLoginId, $hashedKey){
+        $pdo = Database::getPdoObject();
+        $sql = "select auto_login_key from auto_login_keys where auto_login_id=?;";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$autoLoginId]);
+        $key = $stmt->fetchAll()[0][0];
+        return password_verify($key, $hashedKey);
+    }
+
+    public static function getUserFromAutoLoginId($autoLoginId){
+        $pdo = Database::getPdoObject();
+        $sql = "select user_id from auto_login_keys where auto_login_id=?;";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$autoLoginId]);
+        $result = $stmt->fetchAll();
+        return isset($result[0][0]) ? new static($result[0][0]) : null;
+    }
+
+    public static function writeLoginLog($userId, $accessId, $success = true){
         $pdo = Database::getPdoObject();
         $sql = "insert into user_login_log(user_id, access_id, date_time, success) ".
                 "values(?, ?, ?, ?);";
