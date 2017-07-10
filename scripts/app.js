@@ -14,23 +14,39 @@ class App{
 
     static login(callback){
         var accesser = new ServerAccesser();
-        console.log(accesser);
         if(!accesser.loggedIn){
-            var loginModal = new LoginModal((data)=>{
-                accesser.login(data.id, data.password, data.enableAutoLogin, (status)=>{
-                    if(status.status == "error"){
-                        loginModal.showError(status.errorInfo);
-                    }else{
-                        loginModal.hide();
-                        callback();
-                    }
-                });
+            App.tryAutoLogin((success)=>{
+                if(!success){
+                    var loginModal = new LoginModal((data)=>{
+                        accesser.login(data.id, data.password, data.enableAutoLogin, (status)=>{
+                            if(status.status == "error"){
+                                loginModal.showError(status.errorInfo);
+                            }else{
+                                loginModal.hide();
+                                callback();
+                            }
+                        });
+                    });
+                loginModal.make($("body"));
+                loginModal.show();
+                }else{
+                    callback();
+                }
             });
-            loginModal.make($("body"));
-            loginModal.show();
         }else{
             callback();
         }
+    }
+
+    static tryAutoLogin(callback){
+        var accesser = new ServerAccesser();
+        accesser.autoLogin((status)=>{
+            if(status.status == "success"){
+                callback(true);
+            }else{
+                callback(false);
+            }
+        });
     }
 
     static makeNavbar(){
@@ -300,6 +316,37 @@ class ServerAccesser{
             callback({status: "success"});
             return;
         })
+    }
+
+    hasAutoLoginKeys(){
+        return Cookies.get("auto_login_id") != undefined && Cookies.get("auto_login_key")
+    }
+
+    autoLogin(callback){
+        if(!this.hasAutoLoginKeys()){
+            callback({
+                status: "error",
+                errorInfo: "必要な情報がありません。"
+            });
+            return;
+        }
+        var data = {
+            "auto_login_id": Cookies.get("auto_login_id"),
+            "auto_login_key": Cookies.get("auto_login_key")
+        };
+        this.post(this.autoLoginUrl, data, (jsonData)=>{
+            var data = JSON.parse(jsonData);
+            if(data["status"] == "error"){
+                callback({status: "error", errorInfo: data["error_info"]});
+                return;
+            }
+            Cookies.set("access_id", data["access_id"], { expires: 1 });
+            Cookies.set("access_key", data["access_key"], { expires: 1 });
+            Cookies.set("auto_login_key", data["new_auto_login_key"], { expires: 30 });
+            this.getLoginInfo();
+            callback({status: "success"});
+            return;
+        });
     }
 }
 
