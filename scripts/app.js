@@ -908,8 +908,32 @@ class LoginModal{
         $("#loginModal").remove();
     }
 
-    showError(text){
+    showError(text, errorInputs = []){
+        $("#loginModalAlert").remove();
+        if(text.indexOf("ID") >= 0){
+            errorInputs.push("id");
+        }
+        if(text.indexOf("パスワード") >= 0){
+            errorInputs.push("password");
+        }
+        console.log(errorInputs);
+        $("#loginModalBody").append("<div id=\"loginModalAlert\" />");
+        $("#loginModalAlert")
+            .addClass("alert alert-danger")
+            .attr({ "role": "alert" })
+            .text(text);
+        this.resetInputError();
+        if(errorInputs.indexOf("id") >= 0){
+            $("#loginModalIdFormGroup").addClass("has-error");
+        }
+        if(errorInputs.indexOf("password") >= 0){
+            $("#loginModalPasswordFormGroup").addClass("has-error");
+        }
+    }
 
+    resetInputError(){
+        $("#loginModalIdFormGroup").removeClass("has-error");
+        $("#loginModalPasswordFormGroup").removeClass("has-error");
     }
 }
 
