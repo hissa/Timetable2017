@@ -1,13 +1,36 @@
 class App{
 
     static main(){
-        App.makeNavbar();
-        App.showingWeek = 0;
-        App.hourOfNextDay = 15;
-        App.today = App.getToday();
-        console.log("today: {0}".format(App.today.format("YYYY-MM-DD")));
-        App.showTimetable();
-        App.showPagination();
+        App.login(()=>{
+            App.makeNavbar();
+            App.showingWeek = 0;
+            App.hourOfNextDay = 15;
+            App.today = App.getToday();
+            console.log("today: {0}".format(App.today.format("YYYY-MM-DD")));
+            App.showTimetable();
+            App.showPagination();
+        });
+    }
+
+    static login(callback){
+        var accesser = new ServerAccesser();
+        console.log(accesser);
+        if(!accesser.loggedIn){
+            var loginModal = new LoginModal((data)=>{
+                accesser.login(data.id, data.password, data.enableAutoLogin, (status)=>{
+                    if(status.status == "error"){
+                        loginModal.showError(status.errorInfo);
+                    }else{
+                        loginModal.hide();
+                        callback();
+                    }
+                });
+            });
+            loginModal.make($("body"));
+            loginModal.show();
+        }else{
+            callback();
+        }
     }
 
     static makeNavbar(){
@@ -16,8 +39,10 @@ class App{
         App.navbar.title("WEB版時間割2017");
         App.navbar.loginButtonFunction(()=>{
             var loginForm = new LoginModal((data)=>{
-                console.log(data);
-                // いまここ
+                var accesser = new ServerAccesser();
+                var result = accesser.login(data.id, data.password, data.enable_auto_login, (status)=>{
+                    console.log(status)
+                });
             });
             loginForm.make($("body"));
             loginForm.show();
@@ -170,9 +195,23 @@ class TimetablePagination{
 class ServerAccesser{
 
     constructor(){
+        this.loggedIn = false;
+        this.accessId = null;
+        this.accessKey = null;
+        this.getLoginInfo();
         this.getSchedulesUrl = "api/v1/get_schedule.php";
         this.getEventListUrl = "api/v1/get_eventlist.php";
         this.submitNewEventUrl = "api/v1/submit_new_event.php";
+        this.loginUrl = "api/v1/login.php";
+        this.autoLoginUrl = "api/v1/auto_login.php";
+    }
+
+    getLoginInfo(){
+        if(Cookies.get("access_id") != undefined){
+            this.loggedIn = true;
+            this.accessId = Cookies.get("access_id");
+            this.accessKey = Cookies.get("access_key");
+        }
     }
 
     getSchedule(callback){
@@ -237,6 +276,30 @@ class ServerAccesser{
             }
             success(data);
         });
+    }
+
+    login(id, password, enableAutoLogin, callback){
+        var data = {
+            "id": id,
+            "password": password,
+            "enable_auto_login": enableAutoLogin ? 1 : 0
+        };
+        this.post(this.loginUrl, data, (jsonData)=>{
+            var data = JSON.parse(jsonData);
+            if(data["status"] == "error"){
+                callback({status: "error", errorInfo: data["error_info"]});
+                return;
+            }
+            Cookies.set("access_id", data["access_id"], { expires: 1 });
+            Cookies.set("access_key", data["access_key"], { expires: 1 });
+            if(data["auto_login_id"] != undefined){
+                Cookies.set("auto_login_id", data["auto_login_id"], { expires:30 });
+                Cookies.set("auto_login_key", data["auto_login_key"], { expires:30 });
+            }
+            this.getLoginInfo();
+            callback({status: "success"});
+            return;
+        })
     }
 }
 
@@ -811,6 +874,10 @@ class LoginModal{
 
     destroy(){
         $("#loginModal").remove();
+    }
+
+    showError(text){
+
     }
 }
 
