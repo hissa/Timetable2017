@@ -38,6 +38,12 @@ class App{
         }
     }
 
+    static logout(callback){
+        ServerAccesser.logout(()=>{
+            location.reload();
+        });
+    }
+
     static tryAutoLogin(callback){
         var accesser = new ServerAccesser();
         accesser.autoLogin((status)=>{
@@ -53,15 +59,8 @@ class App{
         App.navbar = new NavigationBar($("#navbar"));
         App.navbar.make();
         App.navbar.title("WEB版時間割2017");
-        App.navbar.loginButtonFunction(()=>{
-            var loginForm = new LoginModal((data)=>{
-                var accesser = new ServerAccesser();
-                var result = accesser.login(data.id, data.password, data.enable_auto_login, (status)=>{
-                    console.log(status)
-                });
-            });
-            loginForm.make($("body"));
-            loginForm.show();
+        App.navbar.logoutButtonFunction(()=>{
+            App.logout();
         }); 
     }
 
@@ -347,6 +346,14 @@ class ServerAccesser{
             callback({status: "success"});
             return;
         });
+    }
+
+    static logout(callback){
+        Cookies.remove("access_id");
+        Cookies.remove("access_key");
+        Cookies.remove("auto_login_id");
+        Cookies.remove("auto_login_key");
+        callback();
     }
 }
 
@@ -1022,18 +1029,18 @@ class NavigationBar{
         $("#navbarTitle").addClass("navbar-brand");
         $("#navbarCollapse")
             .addClass("collapse navbar-collapse")
-            .append("<button id=\"navbarLoginButton\" />");
-        $("#navbarLoginButton")
-            .addClass("btn btn-default navbar-btn")
-            .text("ログイン");
+            .append("<button id=\"navbarLogoutButton\" />");
+        $("#navbarLogoutButton")
+            .addClass("btn btn-default navbar-btn navbar-right")
+            .text("ログアウト");
     }
 
     title(title){
         $("#navbarTitle").text(title);
     }
     
-    loginButtonFunction(func){
-        $("#navbarLoginButton").off("click").on("click", func);
+    logoutButtonFunction(func){
+        $("#navbarLogoutButton").off("click").on("click", func);
     }
 }
 
