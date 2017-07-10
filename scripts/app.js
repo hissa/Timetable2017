@@ -831,15 +831,7 @@ class LoginModal{
     makeHeader(jqueryObj){
         jqueryObj
             .addClass("modal-header")
-            .append("<button id=\"loginModalCloseButton\" />")
             .append("ログイン");
-        $("#loginModalCloseButton")
-            .addClass("close")
-            .attr({
-                "type": "close",
-                "data-dismiss": "modal"
-            })
-            .append("<span>×</span>");
     }
 
     makeBody(jqueryObj){
@@ -890,7 +882,6 @@ class LoginModal{
     makeFooter(jqueryObj){
         jqueryObj
             .addClass("modal-footer")
-            .append("<button id=\"loginModalFooterCloseButton\" />")
             .append("<button id=\"loginModalLoginButton\" />");
         $("#loginModalLoginButton")
             .addClass("btn btn-primary")
@@ -902,12 +893,6 @@ class LoginModal{
                     enableAutoLogin: $("#loginModalSaveCheckboxInput").prop("checked")
                 }
                 this.loginFunc(data);
-            });
-        $("#loginModalFooterCloseButton")
-            .addClass("btn btn-default")
-            .append("閉じる")
-            .on("click", (e)=>{
-                this.hide();
             });
     }
 
