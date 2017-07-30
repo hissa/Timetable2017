@@ -1,15 +1,18 @@
 <?php
 require_once "../../server/User.php";
 require_once "../../server/Carbon/Carbon.php";
-$inputId = $_POST["id"];
-$inputPassword = $_POST["password"];
-$enableAutoLogin =
-    isset($_POST["enable_auto_login"]) ? (bool)$_POST["enable_auto_login"] : false;
-//debug
-// $inputId = $_GET["id"];
-// $inputPassword = $_GET["password"];
-// $enableAutoLogin =
-//     isset($_GET["enable_auto_login"]) ? (bool)$_GET["enable_auto_login"] : false;
+if(isset($_POST["id"])){
+    $inputId = $_POST["id"];
+    $inputPassword = $_POST["password"];
+    $enableAutoLogin =
+        isset($_POST["enable_auto_login"]) ? (bool)$_POST["enable_auto_login"] : false;
+}else{
+    //POSTに入力がなければGETを見る
+    $inputId = $_GET["id"];
+    $inputPassword = $_GET["password"];
+    $enableAutoLogin =
+        isset($_GET["enable_auto_login"]) ? (bool)$_GET["enable_auto_login"] : false;
+}
 
 $data = [];
 if(!User::isExistsId($inputId)){
