@@ -26,6 +26,25 @@ class App{
                                 callback();
                             }
                         });
+                    }, (data)=>{
+                        if(data.password == data.rePassword){
+                            accesser.newAccount(data.id, data.name, data.password, (status)=>{
+                                if(status.status == "error"){
+                                    // 失敗したときの処理
+                                    loginModal.showErrorNewAccount(status.errorInfo);
+                                }else{
+                                    // 成功したときの処理
+                                    loginModal.makeLoginForm();
+                                    loginModal.info("アカウントを作成しました。", "success");
+                                }
+                            });
+                        }else{
+                            // パスワードの確認が一致しない場合の処理
+                            loginModal.showErrorNewAccount(
+                                "パスワードとパスワードの確認が一致しません。",
+                                ["password", "rePassword"]
+                            );
+                        }
                     });
                 loginModal.make($("body"));
                 loginModal.show();
@@ -219,6 +238,7 @@ class ServerAccesser{
         this.submitNewEventUrl = "api/v1/submit_new_event.php";
         this.loginUrl = "api/v1/login.php";
         this.autoLoginUrl = "api/v1/auto_login.php";
+        this.newAccountUrl = "api/v1/new_account.php";
     }
 
     getLoginInfo(){
@@ -354,6 +374,22 @@ class ServerAccesser{
         Cookies.remove("auto_login_id");
         Cookies.remove("auto_login_key");
         callback();
+    }
+
+    newAccount(id, name, password, callback){
+        var data = {
+            "id": id,
+            "name": name,
+            "password": password
+        };
+        this.post(this.newAccountUrl, data, (jsonData)=>{
+            var data = JSON.parse(jsonData);
+            if(data.status == "success"){
+                callback({status: data.status });
+                return;
+            }
+            callback({status: data.status, errorInfo: data.error_info});
+        })
     }
 }
 
@@ -811,8 +847,9 @@ class TimetableModal{
 }
 
 class LoginModal{
-    constructor(loginFunc){
+    constructor(loginFunc, newAccountFunc){
         this.loginFunc = loginFunc;
+        this.newAccountFunc = newAccountFunc;
     }
 
     make(modalsJqueryObj){
@@ -830,6 +867,19 @@ class LoginModal{
             .append("<div id=\"loginModalHeader\" />")
             .append("<div id=\"loginModalBody\" />")
             .append("<div id=\"loginModalFooter\" />");
+        this.makeLoginForm();
+    }
+
+    info(text, status = "info"){
+        $("#loginModalInfo").remove();
+        $("#loginModalBody").prepend("<div id=\"loginModalInfo\" />");
+        $("#loginModalInfo")
+            .addClass("alert alert-{0}".format(status))
+            .attr({ "role": "alert" })
+            .text(text);
+    }
+
+    makeLoginForm(){
         this.makeHeader($("#loginModalHeader"));
         this.makeBody($("#loginModalBody"));
         this.makeFooter($("#loginModalFooter"));
@@ -837,6 +887,7 @@ class LoginModal{
 
     makeHeader(jqueryObj){
         jqueryObj
+            .empty()
             .addClass("modal-header")
             .append("ログイン");
     }
@@ -888,11 +939,21 @@ class LoginModal{
 
     makeFooter(jqueryObj){
         jqueryObj
+            .empty()
             .addClass("modal-footer")
+            .append("<button id=\"loginModalNewAccountButton\" />")
             .append("<button id=\"loginModalLoginButton\" />");
+        $("#loginModalNewAccountButton")
+            .addClass("btn btn-default pull-left")
+            .append("新しいアカウントを作成する")
+            .off("click")
+            .on("click", (e)=>{
+                this.makeNewAccountForm();
+            });
         $("#loginModalLoginButton")
             .addClass("btn btn-primary")
             .append("ログイン")
+            .off("click")
             .on("click", (e)=>{
                 var data = {
                     id: $("#loginModalIdInput").val(),
@@ -938,9 +999,150 @@ class LoginModal{
         }
     }
 
+    showErrorNewAccount(text, errorInputs = []){
+        if(text.indexOf("ID") >= 0){
+            errorInputs.push("id");
+        }
+        if(text.indexOf("表示名") >= 0){
+            errorInputs.push("name");
+        }
+        if(text.indexOf("パスワード") >= 0){
+            errorInputs.push("password");
+            errorInputs.push("rePassword");
+        }
+        $("#loginModalBody").append("<div id=\"loginModalAlert\" />");
+        $("#loginModalAlert")
+            .addClass("alert alert-danger")
+            .attr({ "role": "alert" })
+            .text(text);
+        this.resetInputErrorNewAccount();
+        if(errorInputs.indexOf("id") >= 0){
+            $("#loginModalIdFormGroup").addClass("has-error");
+        }
+        if(errorInputs.indexOf("name") >= 0){
+            $("#loginModalNameFormGroup").addClass("has-error");
+        }
+        if(errorInputs.indexOf("password") >= 0){
+            $("#loginModalPasswordFormGroup").addClass("has-error");
+        }
+        if(errorInputs.indexOf("rePassword") >= 0){
+            $("#loginModalRePasswordFormGroup").addClass("has-error");
+        }
+    }
+
+    resetInputErrorNewAccount(){
+        $("#loginModalIdFormGroup").removeClass("has-error");
+        $("#loginModalNameFormGroup").removeClass("has-error");
+        $("#loginModalPasswordFormGroup").removeClass("has-error");
+        $("#loginModalRePasswordFormGroup").removeClass("has-error");
+    }
+
     resetInputError(){
         $("#loginModalIdFormGroup").removeClass("has-error");
         $("#loginModalPasswordFormGroup").removeClass("has-error");
+    }
+
+    makeNewAccountBody(jqueryObj){
+        jqueryObj
+            .empty()
+            .addClass("modal-body")
+            .append("<div id=\"loginModalIdFormGroup\" />")
+            .append("<div id=\"loginModalNameFormGroup\" />")
+            .append("<div id=\"loginModalPasswordFormGroup\" />")
+            .append("<div id=\"loginModalRePasswordFormGroup\" />")
+        $("#loginModalIdFormGroup")
+            .addClass("form-group")
+            .append("<label id=\"loginModalIdLabel\" />")
+            .append("<input id=\"loginModalIdInput\" />");
+        $("#loginModalIdLabel")
+            .attr({ "for": "loginModalIdInput" })
+            .text("ID");
+        $("#loginModalIdInput")
+            .attr({
+                "type": "text",
+                "placeholder": "IDを入力してください。"
+            })
+            .addClass("form-control");
+        $("#loginModalNameFormGroup")
+            .addClass("form-group")
+            .append("<label id=\"loginModalNameLabel\" />")
+            .append("<input id=\"loginModalNameInput\" />");
+        $("#loginModalNameLabel")
+            .attr({ "for": "loginModalNameInput" })
+            .text("表示名");
+        $("#loginModalNameInput")
+            .attr({
+                "type": "text",
+                "placeholder": "表示名を入力してください。"
+            })
+            .addClass("form-control");
+        $("#loginModalPasswordFormGroup")
+            .addClass("form-group")
+            .append("<label id=\"loginModalPasswordLabel\" />")
+            .append("<input id=\"loginModalPasswordInput\" />");
+        $("#loginModalPasswordLabel")
+            .attr({ "for": "loginModalPasswordInput" })
+            .text("パスワード");
+        $("#loginModalPasswordInput")
+            .attr({
+                "type": "password",
+                "placeholder": "パスワードを入力してください。"
+            })
+            .addClass("form-control");
+        $("#loginModalRePasswordFormGroup")
+            .addClass("form-group")
+            .append("<label id=\"loginModalRePasswordLabel\" />")
+            .append("<input id=\"loginModalRePasswordInput\" />");
+        $("#loginModalRePasswordLabel")
+            .attr({ "for": "loginModalRePasswordInput" })
+            .text("パスワードの確認");
+        $("#loginModalRePasswordInput")
+            .attr({
+                "type": "password",
+                "placeholder": "確認のためもう一度パスワードを入力してください。"
+            })
+            .addClass("form-control");
+    }
+
+    makeNewAccountHeader(jqueryObj){
+        jqueryObj
+            .empty()
+            .addClass("modal-header")
+            .append("新規アカウント作成");
+    }
+
+    makeNewAccountFooter(jqueryObj){
+        jqueryObj
+            .empty()
+            .addClass("modal-footer")
+            .append("<button id=\"loginModalBackButton\" />")
+            .append("<button id=\"loginModalCreateAccountButton\" />");
+        $("#loginModalBackButton")
+            .addClass("btn btn-default pull-left")
+            .append("戻る")
+            .off("click")
+            .on("click", (e)=>{
+                this.makeLoginForm();
+            });
+        $("#loginModalCreateAccountButton")
+            .addClass("btn btn-primary")
+            .append("確定")
+            .off("click")
+            .on("click", (e)=>{
+                var data = {
+                    id: $("#loginModalIdInput").val(),
+                    name: $("#loginModalNameInput").val(),
+                    password: $("#loginModalPasswordInput").val(),
+                    rePassword: $("#loginModalRePasswordInput").val()
+                }
+                this.newAccountFunc(data);
+            });
+    }
+
+    makeNewAccountForm(){
+        this.makeNewAccountBody($("#loginModalBody"));
+        this.makeNewAccountHeader($("#loginModalHeader"));
+        this.makeNewAccountFooter($("#loginModalFooter"));
     }
 }
 
