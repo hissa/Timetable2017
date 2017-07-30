@@ -119,7 +119,6 @@ class App{
             App.removeShowing();
             App.timetable.setAddEventEvent((date, subject, eventType, text)=>{
                 text = text == undefined ?  null : text;
-// event new
                 var event = new Event(null, date, eventType, subject, text);
                 var accesser = new ServerAccesser();
                 accesser.submitNewEvent(event, ()=>{
@@ -1225,7 +1224,6 @@ class Event{
         var eventType = data["eventtype"];
         var subject = Subject.parse(data["subject"]);
         var text = data["text"];
-// event new
         return new Event(id, date, eventType, subject, text);
     }
 }
