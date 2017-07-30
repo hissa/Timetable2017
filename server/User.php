@@ -160,6 +160,16 @@ class User{
         return isset($result[0][0]) ? new static($result[0][0]) : null;
     }
 
+    public static function createNewAccount($id, $password, $name){
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        $pdo = Database::getPdoObject();
+        $sql = "insert into users(id, name, hashed_password) ".
+                "values(?, ?, ?);";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$id, $name, $hashedPassword]);
+        return true;
+    }
+
     public static function writeLoginLog($userId, $accessId, $success = true){
         $pdo = Database::getPdoObject();
         $sql = "insert into user_login_log(user_id, access_id, date_time, success) ".
