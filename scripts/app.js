@@ -119,6 +119,7 @@ class App{
             App.removeShowing();
             App.timetable.setAddEventEvent((date, subject, eventType, text)=>{
                 text = text == undefined ?  null : text;
+// event new
                 var event = new Event(null, date, eventType, subject, text);
                 var accesser = new ServerAccesser();
                 accesser.submitNewEvent(event, ()=>{
@@ -461,7 +462,7 @@ class Timetable{
         for(var week = 0; week < 5; week++){
             var day = this.days[week];
             for(var period = 0; period < 3; period++){
-                if(day.periods[period].event != null){
+                if(day.periods[period].events[0] != undefined){
                     $("#table{0}w{1}p{2}".format(this.uniqueId, week, period))
                         .addClass("info");
                 }
@@ -541,7 +542,7 @@ class Timetable{
                 var current = this.scheduleData[day][period];
                 var events = this.searchEvents(currentDate, current.id);
                 var newPeriod = new Period(current);
-                newPeriod.addEvent(events[0]);
+                newPeriod.addEvents(events);
                 periods.push(newPeriod);
                 period++;
             }
@@ -644,7 +645,7 @@ class Timetable{
                 .format(this.uniqueId, "Subject", "教科"))
             .append("<th id=\"table{0}eventlistHead{1}\">{2}</th>"
                 .format(this.uniqueId, "Text", "詳細"));
-        var i =0;
+        var i = 0;
         while(this.eventsData[i]){
             $("#table{0}eventlistTbody".format(this.uniqueId))
                 .append("<tr id=\"table{0}eventlistId{1}\" />"
@@ -711,12 +712,18 @@ class TimetableModal{
             .addClass("modal-body")
             .append("<table id=\"{0}eventlist\" />".format(this.idName));
         var eventlistTable = $("#{0}eventlist".format(this.idName));
-        eventlistTable.addClass("table");
-        // TODO: 複数のイベントに対応する
-        if(this.period.event != null){
-            eventlistTable
+        eventlistTable.addClass("table table-bordered")
+            .append("<thead id=\"{0}eventlistThead\" />".format(this.idName))
+            .append("<tbody id=\"{0}eventlistTbody\" />".format(this.idName));
+        var eventlistTbody = $("#{0}eventlistTbody".format(this.idName));
+        $("#{0}eventlistThead".format(this.idName))
+            .append("<tr><th>種類</th><th>詳細</th></tr>");
+        var i = 0;
+        while(this.period.events[i] != undefined){
+            eventlistTbody
                 .append("<tr><td>{0}</td><td>{1}</td></tr>"
-                    .format(this.period.event.eventTypeForShow, this.period.event.text));
+                    .format(this.period.events[i].eventTypeForShow, this.period.events[i].text));
+            i++;
         }
     }
 
@@ -1175,16 +1182,25 @@ class Day{
 class Period{
     constructor(subject){
         this.subject = subject;
-        this.event = null;
+        this.events = [];
     }
 
     addEvent(event){
         if(event == undefined){
-            this.event = null;
+            this.events = null;
         }
         else{
-            this.event = event;
+            this.events = event;
         }
+    }
+    
+    addEvents(events){
+        if(events == null){
+            return;
+        }
+        events.forEach((value)=>{
+            this.events.push(value);
+        });
     }
 }
 
@@ -1209,6 +1225,7 @@ class Event{
         var eventType = data["eventtype"];
         var subject = Subject.parse(data["subject"]);
         var text = data["text"];
+// event new
         return new Event(id, date, eventType, subject, text);
     }
 }
