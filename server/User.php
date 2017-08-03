@@ -39,14 +39,14 @@ class User{
         $this->makeAccessKey();
     }
 
-    public function access($accessId, $hashedAccessKey){
+    public static function access($accessId, $hashedAccessKey){
         if(!$this->canAccess($accessId, $hashedAccessKey)){
             throw new Exception("AccessKeyが間違っています。");
         }
         $this->loggedIn = true;
     }
 
-    public function canAccess($accessId, $hashedAccessKey){
+    public static function canAccess($accessId, $hashedAccessKey){
         if(!static::isExistsAccessId($accessId)){
             throw new Exception("AccessIdが存在しません。");
         }
@@ -56,8 +56,9 @@ class User{
         $stmt->execute([$accessId, Carbon::now("Asia/Tokyo")]);
         $result = $stmt->fetchAll();
         $keyCorrect = password_verify($result[0]["access_key"], $hashedAccessKey);
-        $idCorrect = $this->id == $result[0]["user_id"];
-        return $keyCorrect && $idCorrect;
+        // staticメソッドでいいと思ったのでIDの照合をパス
+        // $idCorrect = $this->id == $result[0]["user_id"];
+        return $keyCorrect/* && $idCorrect */;
     }
 
     public static function isExistsAccessId($accessId){

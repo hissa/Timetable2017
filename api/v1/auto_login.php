@@ -28,9 +28,3 @@ $data["access_id"] = $user->accessId;
 $data["access_key"] = $user->hashedAccessKey;
 $data["new_auto_login_key"] = $newKey;
 echo json_encode($data, JSON_UNESCAPED_UNICODE);
-// debug
-// $autoLoginId = $_GET["auto_login_id"];
-// $autoLoginKey = $_GET["auto_login_key"];
-// $user = User::getUserFromAutoLoginId($autoLoginId);
-// $newKey = $user->autoLogin($autoLoginId, $autoLoginKey);
-// var_dump($newKey);

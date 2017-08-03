@@ -250,7 +250,10 @@ class ServerAccesser{
     }
 
     getSchedule(callback){
-        this.getJson(this.getSchedulesUrl, (data)=>{
+        this.getLoginInfo();
+        var reqStr = "?access_id={0}&access_key={1}"
+            .format(this.accessId, this.accessKey);
+        this.getJson(this.getSchedulesUrl + reqStr, (data)=>{
             var parsedSchedule = [];
             var day = 0;
             while(data[day]){
@@ -268,9 +271,11 @@ class ServerAccesser{
     }
 
     getEventList(start, end, callback){
+        this.getLoginInfo();
         var startStr = start.format("YYYY-MM-DD");
         var endStr = end.format("YYYY-MM-DD");
-        var getReqStr = "?start={0}&end={1}".format(startStr, endStr);
+        var getReqStr = "?start={0}&end={1}&access_id={2}&access_key={3}"
+        .format(startStr, endStr, this.accessId, this.accessKey);
         this.getJson(this.getEventListUrl + getReqStr, (data)=>{
             var parsedEventList = [];
             var i = 0;
@@ -293,11 +298,14 @@ class ServerAccesser{
     }
 
     submitNewEvent(event, callback){
+        this.getLoginInfo();
         var data = {
             "date": event.date.format("YYYY-MM-DD"),
             "subject_id": event.subject.id,
             "event_type": event.eventType,
-            "text": event.text
+            "text": event.text,
+            "access_id": this.accessId,
+            "access_key": this.accessKey
         };
         this.post(this.submitNewEventUrl, data, (data)=>{
             callback();

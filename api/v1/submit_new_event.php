@@ -4,7 +4,20 @@ require_once "../../server/Event.php";
 require_once "../../server/Carbon/Carbon.php";
 require_once "../../server/Subject.php";
 require_once "../../server/Database.php";
+require_once "../../server/User.php";
 use Carbon\Carbon;
+if(!(isset($_POST["access_id"]) && isset($_POST["access_key"]))){
+    echo "ログインしてください。";
+    die();
+}
+if(!User::isExistsAccessId($_POST["access_id"])){
+    echo "IDが存在しません。";
+    die();
+}
+if(!User::canAccess($_POST["access_id"], $_POST["access_key"])){
+    echo "ログインできませんでした。";
+    die();
+}
 
 $date = $_POST["date"];
 $subjectId = $_POST["subject_id"];
