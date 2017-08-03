@@ -18,10 +18,12 @@ if(!User::canAccess($_POST["access_id"], $_POST["access_key"])){
     echo "ログインできませんでした。";
     die();
 }
+$user = User::access($_POST["access_id"], $_POST["access_key"]);
 
 $date = $_POST["date"];
 $subjectId = $_POST["subject_id"];
 $eventType = $_POST["event_type"];
 $text = isset($_POST["text"]) ? $_POST["text"] : null;
-Timetable::SubmitNewEvent($date, $subjectId, $eventType, $text);
+$insertedId = Timetable::SubmitNewEvent($date, $subjectId, $eventType, $text);
+Event::writeActionLog($insertedId, $user->id);
 echo "success";

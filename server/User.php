@@ -34,16 +34,24 @@ class User{
         $this->makeAccessKey();
     }
 
-    protected function forcedLogin(){
+    public function forcedLogin(){
         $this->loggedIn = true;
         $this->makeAccessKey();
     }
 
     public static function access($accessId, $hashedAccessKey){
-        if(!$this->canAccess($accessId, $hashedAccessKey)){
+        if(!static::canAccess($accessId, $hashedAccessKey)){
             throw new Exception("AccessKeyが間違っています。");
         }
-        $this->loggedIn = true;
+        $pdo = Database::getPdoObject();
+        $sql = "select * from access_keys where access_id=? and expiration>=?;";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$accessId, Carbon::now("Asia/Tokyo")]);
+        $result = $stmt->fetchAll();
+        $id = $result[0]["user_id"];
+        $user = new User($id);
+        $user->forcedLogin();
+        return $user;
     }
 
     public static function canAccess($accessId, $hashedAccessKey){

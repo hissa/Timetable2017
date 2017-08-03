@@ -77,6 +77,7 @@ class Timetable{
 
     public static function SubmitNewEvent($date, $subjectId, $eventType, $text){
         $newEvent = new Event(null, Carbon::parse($date), new Subject($subjectId), $eventType, $text);
-        $newEvent->AddToDatabase();
+        $insertedId = $newEvent->AddToDatabase();
+        return $insertedId;
     }
 }

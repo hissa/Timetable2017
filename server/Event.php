@@ -85,5 +85,14 @@ class Event{
             $this->EventType,
             $this->Text
         ]);
+        return $pdo->lastInsertId();
+    }
+
+    public static function writeActionLog($insertedId, $userId){
+        $pdo = Database::getPdoObject();
+        $sql = "insert into action_logs(user_id, action_type, date_time, event_id)".
+                " values(?, ?, ?, ?);";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$userId, "add", Carbon::now("Asia/Tokyo"), $insertedId]);
     }
 }
