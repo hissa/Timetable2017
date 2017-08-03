@@ -23,7 +23,7 @@ class User{
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$this->id]);
         $result = $stmt->fetchAll();
-        $this->displayName = $result[0]["id"];
+        $this->displayName = $result[0]["name"];
     }
 
     public function login($password){

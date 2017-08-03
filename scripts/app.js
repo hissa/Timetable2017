@@ -81,6 +81,13 @@ class App{
         App.navbar.logoutButtonFunction(()=>{
             App.logout();
         }); 
+        var accesser = new ServerAccesser();
+        var account = accesser.getUserInfo((data)=>{
+            console.log(data);
+            var id = data["user_id"];
+            var name = data["user_name"];
+            App.navbar.addLoginInfo(id, name);
+        });
     }
 
     static getToday(date = null){
@@ -239,6 +246,7 @@ class ServerAccesser{
         this.loginUrl = "api/v1/login.php";
         this.autoLoginUrl = "api/v1/auto_login.php";
         this.newAccountUrl = "api/v1/new_account.php";
+        this.getUserInfoUrl = "api/v1/get_account_info.php";
     }
 
     getLoginInfo(){
@@ -247,6 +255,16 @@ class ServerAccesser{
             this.accessId = Cookies.get("access_id");
             this.accessKey = Cookies.get("access_key");
         }
+    }
+
+    getUserInfo(callback){
+        this.getLoginInfo();
+        this.post(this.getUserInfoUrl, {
+            "access_id": this.accessId,
+            "access_key": this.accessKey
+        },(data)=>{
+            callback(JSON.parse(data));
+        });
     }
 
     getSchedule(callback){
@@ -1240,6 +1258,8 @@ class NavigationBar{
     constructor(jqueryObj){
         this.navbarObject = jqueryObj;
         this.loginButtonFunc = null;
+        this.userId = null;
+        this.userName = null;
     }
 
     make(){
@@ -1254,10 +1274,12 @@ class NavigationBar{
         $("#navbarTitle").addClass("navbar-brand");
         $("#navbarCollapse")
             .addClass("collapse navbar-collapse")
-            .append("<button id=\"navbarLogoutButton\" />");
+            .append("<button id=\"navbarLogoutButton\" />")
+            .append("<p id=\"navbarLoginInfo\" />");
         $("#navbarLogoutButton")
             .addClass("btn btn-default navbar-btn navbar-right")
             .text("ログアウト");
+        $("#navbarLoginInfo").addClass("navbar-right navbar-text");
     }
 
     title(title){
@@ -1266,6 +1288,13 @@ class NavigationBar{
     
     logoutButtonFunction(func){
         $("#navbarLogoutButton").off("click").on("click", func);
+    }
+
+    addLoginInfo(id, name){
+        this.userId = id;
+        this.userName = name;
+        var text = "{0}({1})でログインしています。".format(this.userId, this.userName);
+        $("#navbarLoginInfo").text(text);
     }
 }
 
