@@ -977,7 +977,7 @@ class LoginModal{
             .append("<button id=\"loginModalLoginButton\" />");
         $("#loginModalNewAccountButton")
             .addClass("btn btn-default pull-left")
-            .append("新しいアカウントを作成する")
+            .append("新規アカウント作成")
             .off("click")
             .on("click", (e)=>{
                 this.makeNewAccountForm();
@@ -1270,8 +1270,19 @@ class NavigationBar{
             .append("<div id=\"navbarCollapse\" />");
         $("#navbarHeader")
             .addClass("navbar-header")
+            .append("<button id=\"navbarButton\" />")
             .append("<span id=\"navbarTitle\" />");
         $("#navbarTitle").addClass("navbar-brand");
+        $("#navbarButton")
+            .attr({
+                "type": "button",
+                "data-toggle": "collapse",
+                "data-target": "#navbarCollapse"
+            })
+            .addClass("navbar-toggle collapsed");
+        for(var i = 0; i < 3; i++){
+            $("#navbarButton").append("<span class=\"icon-bar\" />");
+        }
         $("#navbarCollapse")
             .addClass("collapse navbar-collapse")
             .append("<button id=\"navbarLogoutButton\" />")
