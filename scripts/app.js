@@ -28,7 +28,7 @@ class App{
                         });
                     }, (data)=>{
                         if(data.password == data.rePassword){
-                            accesser.newAccount(data.id, data.name, data.password, (status)=>{
+                            accesser.newAccount(data.id, data.name, data.password, data.inviteKey ,(status)=>{
                                 if(status.status == "error"){
                                     // 失敗したときの処理
                                     loginModal.showErrorNewAccount(status.errorInfo);
@@ -402,11 +402,12 @@ class ServerAccesser{
         callback();
     }
 
-    newAccount(id, name, password, callback){
+    newAccount(id, name, password, inviteKey, callback){
         var data = {
             "id": id,
             "name": name,
-            "password": password
+            "password": password,
+            "invite_key": inviteKey
         };
         this.post(this.newAccountUrl, data, (jsonData)=>{
             var data = JSON.parse(jsonData);
@@ -1032,6 +1033,9 @@ class LoginModal{
     }
 
     showErrorNewAccount(text, errorInputs = []){
+        if(text.indexOf("招待コード") >= 0){
+            errorInputs.push("inviteKey");
+        }
         if(text.indexOf("ID") >= 0){
             errorInputs.push("id");
         }
@@ -1060,6 +1064,9 @@ class LoginModal{
         if(errorInputs.indexOf("rePassword") >= 0){
             $("#loginModalRePasswordFormGroup").addClass("has-error");
         }
+        if(errorInputs.indexOf("inviteKey") >= 0){
+            $("#loginModalInviteKeyFormGroup").addClass("has-error");
+        }
     }
 
     resetInputErrorNewAccount(){
@@ -1078,10 +1085,24 @@ class LoginModal{
         jqueryObj
             .empty()
             .addClass("modal-body")
+            .append("<div id=\"loginModalInviteKeyFormGroup\" />")
             .append("<div id=\"loginModalIdFormGroup\" />")
             .append("<div id=\"loginModalNameFormGroup\" />")
             .append("<div id=\"loginModalPasswordFormGroup\" />")
             .append("<div id=\"loginModalRePasswordFormGroup\" />")
+        $("#loginModalInviteKeyFormGroup")
+            .addClass("form-group")
+            .append("<label id=\"loginModalInviteKeyLabel\" />")
+            .append("<input id=\"loginModalInviteKeyInput\" />");
+        $("#loginModalInviteKeyLabel")
+            .attr({ "for": "loginModalInviteKeyInput" })
+            .text("招待コード");
+        $("#loginModalInviteKeyInput")
+            .attr({
+                "type": "text",
+                "placeholder": "招待コードを入力してください。"
+            })
+            .addClass("form-control");
         $("#loginModalIdFormGroup")
             .addClass("form-group")
             .append("<label id=\"loginModalIdLabel\" />")
@@ -1165,8 +1186,9 @@ class LoginModal{
                     id: $("#loginModalIdInput").val(),
                     name: $("#loginModalNameInput").val(),
                     password: $("#loginModalPasswordInput").val(),
-                    rePassword: $("#loginModalRePasswordInput").val()
-                }
+                    rePassword: $("#loginModalRePasswordInput").val(),
+                    inviteKey: $("#loginModalInviteKeyInput").val()
+                };
                 this.newAccountFunc(data);
             });
     }
