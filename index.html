@@ -1,0 +1,43 @@
+<html>
+
+<head>
+    <title>WEB版時間割2017</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8">
+     <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+        crossorigin="anonymous"></script>
+    <!-- jQuery.Cookie -->
+    <script src="scripts/libs/js.cookie.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+        crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+        crossorigin="anonymous">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+        crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <nav class="navbar navbar-default" id="navbar">
+    </nav>
+    <div class="text-center">
+        <ul class="pagination" id="timetablePagination">
+        </ul>
+    </div>
+    <table class="table table-striped table-bordered" id="timetable"></table>
+    <table class="table table-striped table-bordered" id="eventlist"></table>
+    <div id="modals"></div>
+    <!--Moment.js -->
+    <script src="./scripts/libs/moment-with-locales.js"></script>
+    <!-- string-format.js -->
+    <script src="./scripts/libs/string-format.js"></script>
+
+    <script src="./scripts/app.js"></script>
+</body>
+
+</html>
