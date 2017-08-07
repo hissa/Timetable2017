@@ -145,9 +145,9 @@ class User{
         }
         $newKey = password_hash(uniqid(), PASSWORD_DEFAULT);
         $pdo = Database::getPdoObject();
-        $sql = "update auto_login_keys set auto_login_key=? where auto_login_id=?,expiration=?;";
+        $sql = "update auto_login_keys set auto_login_key=?, expiration=? where auto_login_id=?;";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$newKey, $autoLoginId, Carbon::now("Asia/Tokyo")->addMonth()]);
+        $stmt->execute([$newKey, Carbon::now("Asia/Tokyo")->addMonth(), $autoLoginId]);
         return password_hash($newKey, PASSWORD_DEFAULT);
     }
 
@@ -180,11 +180,11 @@ class User{
         return true;
     }
 
-    public static function writeLoginLog($userId, $accessId, $success = true){
+    public static function writeLoginLog($userId, $accessId, $auto = false,$success = true){
         $pdo = Database::getPdoObject();
-        $sql = "insert into user_login_log(user_id, access_id, date_time, success) ".
-                "values(?, ?, ?, ?);";
+        $sql = "insert into user_login_log(user_id, access_id, date_time, success, auto) ".
+                "values(?, ?, ?, ?, ?);";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$userId, $accessId, Carbon::now("Asia/Tokyo"), $success]);
+        $stmt->execute([$userId, $accessId, Carbon::now("Asia/Tokyo"), $success, $auto]);
     }
 }
