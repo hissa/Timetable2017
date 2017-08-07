@@ -181,6 +181,8 @@ class User{
     }
 
     public static function writeLoginLog($userId, $accessId, $auto = false,$success = true){
+        $auto = $auto ? 1 : 0;
+        $success = $success ? 1 : 0;
         $pdo = Database::getPdoObject();
         $sql = "insert into user_login_log(user_id, access_id, date_time, success, auto) ".
                 "values(?, ?, ?, ?, ?);";
