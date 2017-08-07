@@ -27,4 +27,5 @@ $data["status"] = "success";
 $data["access_id"] = $user->accessId;
 $data["access_key"] = $user->hashedAccessKey;
 $data["new_auto_login_key"] = $newKey;
+User::writeLoginLog($user->id, $user->accessId, true);
 echo json_encode($data, JSON_UNESCAPED_UNICODE);

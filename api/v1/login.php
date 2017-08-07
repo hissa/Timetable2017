@@ -43,4 +43,5 @@ if($enableAutoLogin){
     $data["auto_login_id"] = $keys["autoLoginId"];
     $data["auto_login_key"] = $keys["hashedAutoLoginKey"];
 }
+User::writeLoginLog($user->id, $user->accessId);
 echo json_encode($data, JSON_UNESCAPED_UNICODE);
