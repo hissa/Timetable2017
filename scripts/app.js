@@ -822,15 +822,13 @@ class TimetableModal{
         $("#{0}addEventButton".format(this.idName))
             .off("click")
             .on("click", (e)=>{
-                console.log($("[name={0}typeRadios]:checked".format(this.idName)).val());
-                console.log($("#{0}textboxInput".format(this.idName)).val());
                 this.deligateAddEventForm();
                 if(this.addEventFunc != undefined){
                     this.addEventFunc(
                         this.date,
                         this.period.subject,
-                        $("[name={0}typeRadios]:checked".format(this.idName)).val(),
-                        $("#{0}textboxInput".format(this.idName)).val()
+                        this.eventTypeRadioGroup.checked,
+                        this.eventTextBox.value
                     );
                     this.hide();
                 }
@@ -838,64 +836,21 @@ class TimetableModal{
     }
 
     deligateAddEventForm(){
-        if($("[name={0}typeRadios]:checked".format(this.idName)).val() == undefined){
-            $("#{0}eventTypeRadiosFormGroup".format(this.idName))
-                .addClass("has-error");
+        if(this.eventTypeRadioGroup.checked == null){
+            this.eventTypeRadioGroup.setValidationColor("error");
         }else{
-            $("#{0}eventTypeRadiosFormGroup".format(this.idName))
-                .removeClass("has-error");
+            this.eventTypeRadioGroup.clearValidationColor();
         }
     }
 
     makeAddEventFormBody(jqueryObj){
-        jqueryObj
-            .empty()
-            .append("<div id=\"{0}eventTypeRadiosFormGroup\" />".format(this.idName))
-            .append("<div id=\"{0}textFormGroup\" />".format(this.idName));
-        $("#{0}eventTypeRadiosFormGroup".format(this.idName))
-            .append("<label id=\"{0}eventTypeRadiosLabel\">課題の種類</label>"
-                .format(this.idName))
-            .append("<div id=\"{0}radioReport\" />".format(this.idName))
-            .append("<div id=\"{0}radioWatch\" />".format(this.idName))
-            .append("<div id=\"{0}radioOther\" />".format(this.idName));
-        var radiosCommonAttr = {
-            "type": "radio",
-            "name": "{0}typeRadios".format(this.idName),
-        }
-        $("#{0}radioReport".format(this.idName))
-            .addClass("radio")
-            .append("<label><input id=\"{0}inputRadioReport\">レポート</label>"
-                .format(this.idName));
-        $("#{0}inputRadioReport".format(this.idName))
-            .attr({ "value": "report" })
-            .attr(radiosCommonAttr);
-        $("#{0}radioWatch".format(this.idName))
-            .addClass("radio")
-            .append("<label><input id=\"{0}inputRadioWatch\">放送視聴</label>"
-                .format(this.idName));
-        $("#{0}inputRadioWatch".format(this.idName))
-            .attr({ "value": "watch" })
-            .attr(radiosCommonAttr);
-        $("#{0}radioOther".format(this.idName))
-            .addClass("radio")
-            .append("<label><input id=\"{0}inputRadioOther\">その他</label>"
-                .format(this.idName));
-        $("#{0}inputRadioOther".format(this.idName))
-            .attr({ "value": "other" })
-            .attr(radiosCommonAttr);
-        $("#{0}textFormGroup".format(this.idName))
-            .addClass("form-group")
-            .append("<label id=\"{0}textboxLabel\" />".format(this.idName))
-            .append("<input id=\"{0}textboxInput\">".format(this.idName));
-        $("#{0}textboxLabel".format(this.idName))
-            .attr({ "for": "{0}textboxInput".format(this.idName) })
-            .text("追加情報");
-        $("#{0}textboxInput".format(this.idName))
-            .addClass("form-control")
-            .attr({
-                "type": "text",
-                "placeholder": "追加の情報があれば記入してください。"
-            });
+        this.eventTypeRadioGroup 
+            = new RadioButtonGroup("課題の種類", ["レポート", "放送視聴", "その他"]);
+        this.eventTextBox
+            = new TextBoxForm("追加情報", false, "追加の情報があれば記入してください。");
+        jqueryObj.empty();
+        this.eventTypeRadioGroup.make(jqueryObj);
+        this.eventTextBox.make(jqueryObj);
     }
 }
 
@@ -1543,6 +1498,7 @@ class RadioButtonGroup{
         this._radios = [];
         this._label = label;
         this._isMade = false;
+        RadioButtonGroup._validationColors = ["success", "warning", "error"];
         radioLabels.forEach((value)=>{
             this._radios[value] 
                 = new RadioButton(value, "radiogroup{0}".format(this._uniqueId));
@@ -1588,10 +1544,34 @@ class RadioButtonGroup{
         this._radiogroupObj
             .append("<label id=\"radiogroupLabel{0}\" />".format(this._uniqueId));
         this._labelObj = $("#radiogroupLabel{0}".format(this._uniqueId));
-        this._radios.forEach((value)=>{
-            value.make(this._radiogroupObj);
+        this._labelObj.text(this._label);
+        Object.keys(this._radios).forEach((index)=>{
+            this._radios[index].make(this._radiogroupObj);
         });
         this._isMade = true;
+    }
+
+    setValidationColor(name){
+        if(!RadioButtonGroup._isCorrectValidationColor(name)){
+            return;
+        }
+        if(!this._isMade){
+            return;
+        }
+        this._radiogroupObj.addClass("has-{0}".format(name));
+    }
+
+    clearValidationColor(){
+        if(!this._isMade){
+            return;
+        }
+        RadioButtonGroup._validationColors.forEach((value)=>{
+            this._radiogroupObj.removeClass("has-{0}".format(value));
+        });
+    }
+
+    static _isCorrectValidationColor(name){
+        return RadioButtonGroup._validationColors.indexOf(name) >= 0;
     }
 
     static getUniqueId(){
