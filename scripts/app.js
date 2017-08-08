@@ -444,15 +444,15 @@ class Timetable{
         $("#table{0}thead".format(this.uniqueId))
             .append("<tr id=\"table{0}headShowDaytr\" />".format(this.uniqueId))
             .append("<tr id=\"table{0}headtr\" />".format(this.uniqueId));
-        $("#table{0}headtr".format(this.uniqueId))
-            .append("<th id=\"table{0}topleft\" />".format(this.uniqueId));
+        // $("#table{0}headtr".format(this.uniqueId))
+        //     .append("<th id=\"table{0}topleft\" />".format(this.uniqueId));
         for(var i = 0; i < 5; i++){
             $("#table{0}headtr".format(this.uniqueId))
                 .append("<th id=\"table{0}week{1}\">{2}</th>"
                     .format(this.uniqueId, i, weeks[i]));
         }
-        $("#table{0}headShowDaytr".format(this.uniqueId))
-            .append("<td id=\"table{0}showDaytopleft\" />".format(this.uniqueId));
+        // $("#table{0}headShowDaytr".format(this.uniqueId))
+        //     .append("<td id=\"table{0}showDaytopleft\" />".format(this.uniqueId));
         var nowMonth = null;
         for(var i = 0; i < 5; i++){
             var day = this.startDate.clone();
@@ -474,9 +474,9 @@ class Timetable{
                 .append("<tr id=\"table{0}tr{1}\" />".format(this.uniqueId, period));
             for(var week = 0; week <= 5; week++){
                 if(week == 0){
-                    $("#table{0}tr{1}".format(this.uniqueId, period))
-                        .append("<th id=\"table{0}numhead{1}\">{1}</th>"
-                            .format(this.uniqueId, period + 1));
+                    // $("#table{0}tr{1}".format(this.uniqueId, period))
+                    //     .append("<th id=\"table{0}numhead{1}\">{1}</th>"
+                    //         .format(this.uniqueId, period + 1));
                 }else{
                     $("#table{0}tr{1}".format(this.uniqueId, period))
                         .append("<td id=\"table{0}w{1}p{2}\" />"
