@@ -442,13 +442,31 @@ class Timetable{
         var weeks = ["月", "火", "水", "木", "金"];
         tableObject.append("<thead id=\"table{0}thead\" />".format(this.uniqueId));
         $("#table{0}thead".format(this.uniqueId))
+            .append("<tr id=\"table{0}headShowDaytr\" />".format(this.uniqueId))
             .append("<tr id=\"table{0}headtr\" />".format(this.uniqueId));
-        $("#table{0}headtr".format(this.uniqueId))
-            .append("<th id=\"table{0}topleft\" />".format(this.uniqueId));
+        // $("#table{0}headtr".format(this.uniqueId))
+        //     .append("<th id=\"table{0}topleft\" />".format(this.uniqueId));
         for(var i = 0; i < 5; i++){
             $("#table{0}headtr".format(this.uniqueId))
                 .append("<th id=\"table{0}week{1}\">{2}</th>"
                     .format(this.uniqueId, i, weeks[i]));
+        }
+        // $("#table{0}headShowDaytr".format(this.uniqueId))
+        //     .append("<td id=\"table{0}showDaytopleft\" />".format(this.uniqueId));
+        var nowMonth = null;
+        for(var i = 0; i < 5; i++){
+            var day = this.startDate.clone();
+            day.add(i, "day");
+            var text = "";
+            if(nowMonth == null || nowMonth != day.format("M")){
+                text = day.format("M/D");
+                nowMonth = day.format("M");
+            }else{
+                text = day.format("D");
+            }
+            $("#table{0}headShowDaytr".format(this.uniqueId))
+                .append("<td id=\"table{0}showDay{1}\">{2}</td>"
+                    .format(this.uniqueId, i, text));
         }
         tableObject.append("<tbody id=\"table{0}tbody\" />".format(this.uniqueId));
         for(var period = 0; period <= 2; period++){
@@ -456,9 +474,9 @@ class Timetable{
                 .append("<tr id=\"table{0}tr{1}\" />".format(this.uniqueId, period));
             for(var week = 0; week <= 5; week++){
                 if(week == 0){
-                    $("#table{0}tr{1}".format(this.uniqueId, period))
-                        .append("<th id=\"table{0}numhead{1}\">{1}</th>"
-                            .format(this.uniqueId, period + 1));
+                    // $("#table{0}tr{1}".format(this.uniqueId, period))
+                    //     .append("<th id=\"table{0}numhead{1}\">{1}</th>"
+                    //         .format(this.uniqueId, period + 1));
                 }else{
                     $("#table{0}tr{1}".format(this.uniqueId, period))
                         .append("<td id=\"table{0}w{1}p{2}\" />"
@@ -697,7 +715,9 @@ class TimetableModal{
         this.period = period;
         this.uniqueId = TimetableModal.getUniqueId();
         this.idName = "timetableModal{0}".format(this.uniqueId);
-        this.title = this.period.subject.name;
+        var DoW = ["日", "月", "火", "水", "木", "金", "土"];
+        this.datestr = this.date.format("M/D({0}) ".format(DoW[this.date.format("d")]));
+        this.title = this.datestr + this.period.subject.name;
     }
 
     make(modalsJqueryObj){
