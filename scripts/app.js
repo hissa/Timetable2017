@@ -1352,13 +1352,13 @@ class NavigationBar{
 }
 
 class TextBoxForm{
-    constructor(){
+    constructor(label = "", isPassword = false, placeholder = ""){
         this._uniqueId = TextBoxForm.getUniqueId();
-        this._label = "";
-        this._type = "text";
-        this._placeholder = "";
+        this._label = label;
+        this._type = isPassword ? "password" : "text";
+        this._placeholder = placeholder;
         this._isMade = false;
-    }    
+    }
 
     get label(){
         return this._label;
