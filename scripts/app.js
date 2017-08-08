@@ -9,8 +9,6 @@ class App{
             console.log("today: {0}".format(App.today.format("YYYY-MM-DD")));
             App.showTimetable();
             App.showPagination();
-            App.tb = new TextBoxForm("testlabel", false, "testPlaceholder");
-            App.tb.make($("body"));
         });
     }
 
@@ -1460,11 +1458,150 @@ class TextBoxForm{
 }
 
 class RadioButton{
+    constructor(label = "", name = ""){
+        this._uniqueId = RadioButton.getUniqueId();
+        this._label = label;
+        this._name = name;
+        this._value = "radio" + this._uniqueId;
+        this._isMade = false;
+    }
 
+    get label(){
+        return this._label;
+    }
+    set label(value){
+        this._label = value;
+        if(!this._isMade){
+            return;
+        }
+        this._labelSpanObj.text(this._label);
+    }
+
+    get isChecked(){
+        if(!this._isMade){
+            return undefined;
+        }
+        return $("input[name={0}]:checked".format(this._name)).val() === this._value;
+    }
+
+    get name(){
+        return this._name;
+    }
+    set name(value){
+        this._name = value;
+    }
+
+    get value(){
+        return this._value;
+    }
+    set value(value){
+        this._value = value;
+    }
+
+    get isMade(){
+        return this._isMade;
+    }
+
+    make(ParentJqueryObj){
+        ParentJqueryObj
+            .append("<div id=\"radiobutton{0}\" />".format(this._uniqueId));
+        $("#radiobutton{0}".format(this._uniqueId))
+            .append("<label id=\"radiobuttonLabel{0}\" />".format(this._uniqueId));
+        $("#radiobuttonLabel{0}".format(this._uniqueId))
+            .append("<input id=\"radiobuttonInput{0}\">".format(this._uniqueId))
+            .append("<span id=\"radiobuttonLabelSpan{0}\" />".format(this._uniqueId));
+        this._divObj = $("#radiobutton{0}".format(this._uniqueId));
+        this._inputObj = $("#radiobuttonInput{0}".format(this._uniqueId));
+        this._labelSpanObj = $("#radiobuttonLabelSpan{0}".format(this._uniqueId));
+        this._divObj.addClass("radio");
+        this._inputObj.attr({
+            "type": "radio",
+            "name": this._name,
+            "value": this._value
+        });
+        this._labelSpanObj.text(this._label);
+        this._isMade = true;
+    }
+
+    select(){
+        $("input[name={0}]".format(this._name)).val([this._value]);
+    }
+
+    static getUniqueId(){
+        if(TextBoxForm.usedUniqueId == undefined){
+            TextBoxForm.usedUniqueId = 0;
+        }
+        var ret = TextBoxForm.usedUniqueId;
+        TextBoxForm.usedUniqueId++;
+        return ret;
+    }
 }
 
 class RadioButtonGroup{
-    
+    constructor(label = "", radioLabels = []){
+        this._uniqueId = RadioButtonGroup.getUniqueId();
+        this._radios = [];
+        this._label = label;
+        this._isMade = false;
+        radioLabels.forEach((value)=>{
+            this._radios[value] 
+                = new RadioButton(value, "radiogroup{0}".format(this._uniqueId));
+        });
+    }
+
+    get label(){
+        return this._label;
+    }
+    set label(value){
+        this._label = value;
+        if(!this._isMade){
+            return;
+        }
+        this._labelObj.text(this._label);
+    }
+
+    get radios(){
+        return this._radios;
+    }
+
+    get checked(){
+        if(!this._isMade){
+            return undefined;
+        }
+        var ret = null;
+        Object.keys(this._radios).forEach((index)=>{
+            if(this._radios[index].isChecked){
+                ret = index;
+            }
+        });
+        return ret;
+    }
+
+    get selected(){
+        return this.checked;
+    }
+
+    make(ParentJqueryObj){
+        ParentJqueryObj
+            .append("<div id=\"radiogroup{0}\" />".format(this._uniqueId));
+        this._radiogroupObj = $("#radiogroup{0}".format(this._uniqueId));
+        this._radiogroupObj
+            .append("<label id=\"radiogroupLabel{0}\" />".format(this._uniqueId));
+        this._labelObj = $("#radiogroupLabel{0}".format(this._uniqueId));
+        this._radios.forEach((value)=>{
+            value.make(this._radiogroupObj);
+        });
+        this._isMade = true;
+    }
+
+    static getUniqueId(){
+        if(TextBoxForm.usedUniqueId == undefined){
+            TextBoxForm.usedUniqueId = 0;
+        }
+        var ret = TextBoxForm.usedUniqueId;
+        TextBoxForm.usedUniqueId++;
+        return ret;
+    }
 }
 
 App.main();
