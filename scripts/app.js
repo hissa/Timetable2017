@@ -9,6 +9,8 @@ class App{
             console.log("today: {0}".format(App.today.format("YYYY-MM-DD")));
             App.showTimetable();
             App.showPagination();
+            App.tb = new TextBoxForm("testlabel", false, "testPlaceholder");
+            App.tb.make($("body"));
         });
     }
 
@@ -1358,6 +1360,7 @@ class TextBoxForm{
         this._type = isPassword ? "password" : "text";
         this._placeholder = placeholder;
         this._isMade = false;
+        TextBoxForm._validationColors = ["success", "warning", "error"];
     }
 
     get label(){
@@ -1423,6 +1426,29 @@ class TextBoxForm{
         this._isMade = true;
     }
 
+    setValidationColor(name){
+        if(!TextBoxForm._isCorrectValidationColor(name)){
+            return;
+        }
+        if(!this._isMade){
+            return;
+        }
+        this._formGroupObj.addClass("has-{0}".format(name));
+    }
+
+    clearValidationColor(){
+        if(!this._isMade){
+            return;
+        }
+        TextBoxForm._validationColors.forEach((value)=>{
+            this._formGroupObj.removeClass("has-{0}".format(value));
+        });
+    }
+
+    static _isCorrectValidationColor(name){
+        return TextBoxForm._validationColors.indexOf(name) >= 0;
+    }
+
     static getUniqueId(){
         if(TextBoxForm.usedUniqueId == undefined){
             TextBoxForm.usedUniqueId = 0;
@@ -1431,6 +1457,14 @@ class TextBoxForm{
         TextBoxForm.usedUniqueId++;
         return ret;
     }
+}
+
+class RadioButton{
+
+}
+
+class RadioButtonGroup{
+    
 }
 
 App.main();
