@@ -697,7 +697,9 @@ class TimetableModal{
         this.period = period;
         this.uniqueId = TimetableModal.getUniqueId();
         this.idName = "timetableModal{0}".format(this.uniqueId);
-        this.title = this.period.subject.name;
+        var DoW = ["日", "月", "火", "水", "木", "金", "土"];
+        this.datestr = this.date.format("M/D({0}) ".format(DoW[this.date.format("d")]));
+        this.title = this.datestr + this.period.subject.name;
     }
 
     make(modalsJqueryObj){
