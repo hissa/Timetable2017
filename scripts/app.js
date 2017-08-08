@@ -1351,4 +1351,86 @@ class NavigationBar{
     }
 }
 
+class TextBoxForm{
+    constructor(){
+        this._uniqueId = TextBoxForm.getUniqueId();
+        this._label = "";
+        this._type = "text";
+        this._placeholder = "";
+        this._isMade = false;
+    }    
+
+    get label(){
+        return this._label;
+    }
+    set label(value){
+        this._label = value;
+        if(this._isMade){
+            this._labelObj.text(this._label);
+        }
+    }
+
+    get isPassword(){
+        return this._type == "password";
+    }
+    set isPassword(value){
+        this._type = value ? "password" : "text";
+        if(this._isMade){
+            this._inputObj.attr({ "type": this._type });
+        }
+    }
+
+    get placeholder(){
+        return this._placeholder;
+    }
+    set placeholder(value){
+        this._placeholder = value;
+        if(this._isMade){
+            this._inputObj.attr({ "placeholder": this._placeholder });
+        }
+    }
+
+    get isMade(){
+        return this._isMade;
+    }
+
+    get value(){
+        if(!this._isMade){
+            return null;
+        }
+        return this._inputObj.val();
+    }
+
+    make(ParentJqueryObj){
+        ParentJqueryObj
+            .append("<div id=\"textboxFormGroup{0}\" />".format(this._uniqueId));
+        this._formGroupObj = $("#textboxFormGroup{0}".format(this._uniqueId));
+        this._formGroupObj
+            .append("<label id=\"textboxLabel{0}\" />".format(this._uniqueId))
+            .append("<input id=\"textboxInput{0}\" />".format(this._uniqueId));
+        this._labelObj = $("#textboxLabel{0}".format(this._uniqueId));
+        this._inputObj = $("#textboxInput{0}".format(this._uniqueId));
+        this._formGroupObj.addClass("form-group");
+        this._labelObj
+            .text(this._label)
+            .attr({ "for": "textboxInput{0}".format(this._uniqueId) });
+        this._inputObj
+            .addClass("form-control")
+            .attr({
+                "type": this._type,
+                "placeholder": this._placeholder
+            });
+        this._isMade = true;
+    }
+
+    static getUniqueId(){
+        if(TextBoxForm.usedUniqueId == undefined){
+            TextBoxForm.usedUniqueId = 0;
+        }
+        var ret = TextBoxForm.usedUniqueId;
+        TextBoxForm.usedUniqueId++;
+        return ret;
+    }
+}
+
 App.main();
