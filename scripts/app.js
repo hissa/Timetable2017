@@ -8,6 +8,7 @@ class App{
             App.today = App.getToday();
             console.log("today: {0}".format(App.today.format("YYYY-MM-DD")));
             App.showTimetable();
+            Timetable.makeAddEventButton();
             App.showPagination();
         });
     }
@@ -247,6 +248,7 @@ class ServerAccesser{
         this.autoLoginUrl = "api/v1/auto_login.php";
         this.newAccountUrl = "api/v1/new_account.php";
         this.getUserInfoUrl = "api/v1/get_account_info.php";
+        this.getSubjectListUrl = "api/v1/get_subjectlist.php";
     }
 
     getLoginInfo(){
@@ -327,6 +329,20 @@ class ServerAccesser{
         };
         this.post(this.submitNewEventUrl, data, (data)=>{
             callback();
+        });
+    }
+
+    getSubjectList(callback){
+        this.getLoginInfo();
+        var url = "{0}?access_id={1}&access_key={2}"
+            .format(this.getSubjectListUrl, this.accessId, this.accessKey);
+        this.getJson(url, (data)=>{
+            var subjects = [];
+            data.forEach((value)=>{
+                subjects.push(Subject.parse(value));
+            });
+            callback(subjects);
+            return;
         });
     }
 
@@ -438,6 +454,23 @@ class Timetable{
         });
     }
 
+    static makeAddEventButton(){
+        var accesser = new ServerAccesser();
+        accesser.getSubjectList((data)=>{
+            Timetable.subjectList = data;
+            console.log(data);
+        });
+        $("#addEventButton")
+            .addClass("btn btn-primary btn-block")
+            .text("日付と教科を指定して課題を追加")
+            .css({ "margin-bottom": "20px" })
+            .on("click", ()=>{
+                var modal = new AddEventModal(Timetable.subjectList);
+                modal.make($("#modals"));
+                modal.show();
+            });
+    }
+
     makeTimetable(tableObject){
         var weeks = ["月", "火", "水", "木", "金"];
         tableObject.append("<thead id=\"table{0}thead\" />".format(this.uniqueId));
@@ -490,14 +523,25 @@ class Timetable{
     }
 
     setSubjectNames(shortName = false){
+        var settingjson = Cookies.get("settings");
+        var shortName = false;
+        if(settingjson != undefined){
+            var settings = JSON.parse(settingjson);
+            var shortName = settings.useShortSubjectName;
+        }
         for(var week = 0; week < 5; week++){
             var day = this.days[week];
             for(var period = 0; period < 3; period++){
                 if(day == undefined){
                     console.log(this.days);
                 }
-                $("#table{0}w{1}p{2}".format(this.uniqueId, week, period))
-                    .text(day.periods[period].subject.name);
+                if(!shortName){
+                    $("#table{0}w{1}p{2}".format(this.uniqueId, week, period))
+                        .text(day.periods[period].subject.name);
+                }else{
+                    $("#table{0}w{1}p{2}".format(this.uniqueId, week, period))
+                        .text(day.periods[period].subject.shortName);
+                }
             }
         }
     }
@@ -822,15 +866,13 @@ class TimetableModal{
         $("#{0}addEventButton".format(this.idName))
             .off("click")
             .on("click", (e)=>{
-                console.log($("[name={0}typeRadios]:checked".format(this.idName)).val());
-                console.log($("#{0}textboxInput".format(this.idName)).val());
                 this.deligateAddEventForm();
                 if(this.addEventFunc != undefined){
                     this.addEventFunc(
                         this.date,
                         this.period.subject,
-                        $("[name={0}typeRadios]:checked".format(this.idName)).val(),
-                        $("#{0}textboxInput".format(this.idName)).val()
+                        this.eventTypeRadioGroup.checked,
+                        this.eventTextBox.value
                     );
                     this.hide();
                 }
@@ -838,64 +880,21 @@ class TimetableModal{
     }
 
     deligateAddEventForm(){
-        if($("[name={0}typeRadios]:checked".format(this.idName)).val() == undefined){
-            $("#{0}eventTypeRadiosFormGroup".format(this.idName))
-                .addClass("has-error");
+        if(this.eventTypeRadioGroup.checked == null){
+            this.eventTypeRadioGroup.setValidationColor("error");
         }else{
-            $("#{0}eventTypeRadiosFormGroup".format(this.idName))
-                .removeClass("has-error");
+            this.eventTypeRadioGroup.clearValidationColor();
         }
     }
 
     makeAddEventFormBody(jqueryObj){
-        jqueryObj
-            .empty()
-            .append("<div id=\"{0}eventTypeRadiosFormGroup\" />".format(this.idName))
-            .append("<div id=\"{0}textFormGroup\" />".format(this.idName));
-        $("#{0}eventTypeRadiosFormGroup".format(this.idName))
-            .append("<label id=\"{0}eventTypeRadiosLabel\">課題の種類</label>"
-                .format(this.idName))
-            .append("<div id=\"{0}radioReport\" />".format(this.idName))
-            .append("<div id=\"{0}radioWatch\" />".format(this.idName))
-            .append("<div id=\"{0}radioOther\" />".format(this.idName));
-        var radiosCommonAttr = {
-            "type": "radio",
-            "name": "{0}typeRadios".format(this.idName),
-        }
-        $("#{0}radioReport".format(this.idName))
-            .addClass("radio")
-            .append("<label><input id=\"{0}inputRadioReport\">レポート</label>"
-                .format(this.idName));
-        $("#{0}inputRadioReport".format(this.idName))
-            .attr({ "value": "report" })
-            .attr(radiosCommonAttr);
-        $("#{0}radioWatch".format(this.idName))
-            .addClass("radio")
-            .append("<label><input id=\"{0}inputRadioWatch\">放送視聴</label>"
-                .format(this.idName));
-        $("#{0}inputRadioWatch".format(this.idName))
-            .attr({ "value": "watch" })
-            .attr(radiosCommonAttr);
-        $("#{0}radioOther".format(this.idName))
-            .addClass("radio")
-            .append("<label><input id=\"{0}inputRadioOther\">その他</label>"
-                .format(this.idName));
-        $("#{0}inputRadioOther".format(this.idName))
-            .attr({ "value": "other" })
-            .attr(radiosCommonAttr);
-        $("#{0}textFormGroup".format(this.idName))
-            .addClass("form-group")
-            .append("<label id=\"{0}textboxLabel\" />".format(this.idName))
-            .append("<input id=\"{0}textboxInput\">".format(this.idName));
-        $("#{0}textboxLabel".format(this.idName))
-            .attr({ "for": "{0}textboxInput".format(this.idName) })
-            .text("追加情報");
-        $("#{0}textboxInput".format(this.idName))
-            .addClass("form-control")
-            .attr({
-                "type": "text",
-                "placeholder": "追加の情報があれば記入してください。"
-            });
+        this.eventTypeRadioGroup 
+            = new RadioButtonGroup("課題の種類", ["レポート", "放送視聴", "その他"]);
+        this.eventTextBox
+            = new TextBoxForm("追加情報", false, "追加の情報があれば記入してください。");
+        jqueryObj.empty();
+        this.eventTypeRadioGroup.make(jqueryObj);
+        this.eventTextBox.make(jqueryObj);
     }
 }
 
@@ -946,48 +945,15 @@ class LoginModal{
     }
 
     makeBody(jqueryObj){
+        this.idTextBox = new TextBoxForm("ID", false, "IDを入力してください。");
+        this.passwordTextBox = new TextBoxForm("パスワード", true, "パスワードを入力してください。");
+        this.keepLoginCheckbox = new CheckBox("ログイン状態を保存");
         jqueryObj
             .empty()
-            .addClass("modal-body")
-            .append("<div id=\"loginModalIdFormGroup\" />")
-            .append("<div id=\"loginModalPasswordFormGroup\" />")
-            .append("<div id=\"loginModalSaveCheckbox\" />");
-        $("#loginModalIdFormGroup")
-            .addClass("form-group")
-            .append("<label id=\"loginModalIdLabel\" />")
-            .append("<input id=\"loginModalIdInput\" />");
-        $("#loginModalIdLabel")
-            .attr({ "for": "loginModalIdInput" })
-            .text("ID");
-        $("#loginModalIdInput")
-            .attr({
-                "type": "text",
-                "placeholder": "IDを入力してください。"
-            })
-            .addClass("form-control");
-        $("#loginModalPasswordFormGroup")
-            .addClass("form-group")
-            .append("<label id=\"loginModalPasswordLabel\" />")
-            .append("<input id=\"loginModalPasswordInput\" />");
-        $("#loginModalPasswordLabel")
-            .attr({ "for": "loginModalPasswordInput" })
-            .text("パスワード");
-        $("#loginModalPasswordInput")
-            .attr({
-                "type": "password",
-                "placeholder": "パスワードを入力してください。"
-            })
-            .addClass("form-control");
-        $("#loginModalSaveCheckbox")
-            .append("<label id=\"loginModalSaveLabel\" />");
-        $("#loginModalSaveLabel")
-            .append("<input id=\"loginModalSaveCheckboxInput\" />")
-            .append("ログイン状態を保存");
-        $("#loginModalSaveCheckboxInput")
-            .attr({
-                "type": "checkbox",
-                "value": "saveLogedIn"
-            });
+            .addClass("modal-body");
+        this.idTextBox.make(jqueryObj);
+        this.passwordTextBox.make(jqueryObj);
+        this.keepLoginCheckbox.make(jqueryObj);
     }
 
     makeFooter(jqueryObj){
@@ -1009,9 +975,9 @@ class LoginModal{
             .off("click")
             .on("click", (e)=>{
                 var data = {
-                    id: $("#loginModalIdInput").val(),
-                    password: $("#loginModalPasswordInput").val(),
-                    enableAutoLogin: $("#loginModalSaveCheckboxInput").prop("checked")
+                    id: this.idTextBox.value,
+                    password: this.passwordTextBox.value,
+                    enableAutoLogin: this.keepLoginCheckbox.isChecked
                 }
                 this.loginFunc(data);
             });
@@ -1037,18 +1003,18 @@ class LoginModal{
         if(text.indexOf("パスワード") >= 0){
             errorInputs.push("password");
         }
-        console.log(errorInputs);
         $("#loginModalBody").append("<div id=\"loginModalAlert\" />");
         $("#loginModalAlert")
             .addClass("alert alert-danger")
             .attr({ "role": "alert" })
             .text(text);
-        this.resetInputError();
+        this.idTextBox.clearValidationColor();
+        this.passwordTextBox.clearValidationColor();
         if(errorInputs.indexOf("id") >= 0){
-            $("#loginModalIdFormGroup").addClass("has-error");
+            this.idTextBox.setValidationColor("error");
         }
         if(errorInputs.indexOf("password") >= 0){
-            $("#loginModalPasswordFormGroup").addClass("has-error");
+            this.passwordTextBox.setValidationColor("error");
         }
     }
 
@@ -1071,21 +1037,25 @@ class LoginModal{
             .addClass("alert alert-danger")
             .attr({ "role": "alert" })
             .text(text);
-        this.resetInputErrorNewAccount();
+        this.naIdTextBox.clearValidationColor();
+        this.naNameTextBox.clearValidationColor();
+        this.naPasswordTextBox.clearValidationColor();
+        this.naRePasswordTextBox.clearValidationColor();
+        this.naInviteKeyTextBox.clearValidationColor();
         if(errorInputs.indexOf("id") >= 0){
-            $("#loginModalIdFormGroup").addClass("has-error");
+            this.naIdTextBox.setValidationColor("error");
         }
         if(errorInputs.indexOf("name") >= 0){
-            $("#loginModalNameFormGroup").addClass("has-error");
+            this.naNameTextBox.setValidationColor("error");
         }
         if(errorInputs.indexOf("password") >= 0){
-            $("#loginModalPasswordFormGroup").addClass("has-error");
+            this.naPasswordTextBox.setValidationColor("error");
         }
         if(errorInputs.indexOf("rePassword") >= 0){
-            $("#loginModalRePasswordFormGroup").addClass("has-error");
+            this.naRePasswordTextBox.setValidationColor("error");
         }
         if(errorInputs.indexOf("inviteKey") >= 0){
-            $("#loginModalInviteKeyFormGroup").addClass("has-error");
+            this.naInviteKeyTextBox.setValidationColor("error");
         }
     }
 
@@ -1096,85 +1066,24 @@ class LoginModal{
         $("#loginModalRePasswordFormGroup").removeClass("has-error");
     }
 
-    resetInputError(){
-        $("#loginModalIdFormGroup").removeClass("has-error");
-        $("#loginModalPasswordFormGroup").removeClass("has-error");
-    }
-
     makeNewAccountBody(jqueryObj){
-        jqueryObj
-            .empty()
-            .addClass("modal-body")
-            .append("<div id=\"loginModalInviteKeyFormGroup\" />")
-            .append("<div id=\"loginModalIdFormGroup\" />")
-            .append("<div id=\"loginModalNameFormGroup\" />")
-            .append("<div id=\"loginModalPasswordFormGroup\" />")
-            .append("<div id=\"loginModalRePasswordFormGroup\" />")
-        $("#loginModalInviteKeyFormGroup")
-            .addClass("form-group")
-            .append("<label id=\"loginModalInviteKeyLabel\" />")
-            .append("<input id=\"loginModalInviteKeyInput\" />");
-        $("#loginModalInviteKeyLabel")
-            .attr({ "for": "loginModalInviteKeyInput" })
-            .text("招待コード");
-        $("#loginModalInviteKeyInput")
-            .attr({
-                "type": "text",
-                "placeholder": "招待コードを入力してください。"
-            })
-            .addClass("form-control");
-        $("#loginModalIdFormGroup")
-            .addClass("form-group")
-            .append("<label id=\"loginModalIdLabel\" />")
-            .append("<input id=\"loginModalIdInput\" />");
-        $("#loginModalIdLabel")
-            .attr({ "for": "loginModalIdInput" })
-            .text("ID");
-        $("#loginModalIdInput")
-            .attr({
-                "type": "text",
-                "placeholder": "IDを入力してください。"
-            })
-            .addClass("form-control");
-        $("#loginModalNameFormGroup")
-            .addClass("form-group")
-            .append("<label id=\"loginModalNameLabel\" />")
-            .append("<input id=\"loginModalNameInput\" />");
-        $("#loginModalNameLabel")
-            .attr({ "for": "loginModalNameInput" })
-            .text("表示名");
-        $("#loginModalNameInput")
-            .attr({
-                "type": "text",
-                "placeholder": "表示名を入力してください。"
-            })
-            .addClass("form-control");
-        $("#loginModalPasswordFormGroup")
-            .addClass("form-group")
-            .append("<label id=\"loginModalPasswordLabel\" />")
-            .append("<input id=\"loginModalPasswordInput\" />");
-        $("#loginModalPasswordLabel")
-            .attr({ "for": "loginModalPasswordInput" })
-            .text("パスワード");
-        $("#loginModalPasswordInput")
-            .attr({
-                "type": "password",
-                "placeholder": "パスワードを入力してください。"
-            })
-            .addClass("form-control");
-        $("#loginModalRePasswordFormGroup")
-            .addClass("form-group")
-            .append("<label id=\"loginModalRePasswordLabel\" />")
-            .append("<input id=\"loginModalRePasswordInput\" />");
-        $("#loginModalRePasswordLabel")
-            .attr({ "for": "loginModalRePasswordInput" })
-            .text("パスワードの確認");
-        $("#loginModalRePasswordInput")
-            .attr({
-                "type": "password",
-                "placeholder": "確認のためもう一度パスワードを入力してください。"
-            })
-            .addClass("form-control");
+        this.naInviteKeyTextBox =
+            new TextBoxForm("招待コード", false, "招待コードを入力してください。");
+        this.naIdTextBox =
+            new TextBoxForm("ID", false, "IDを入力してください。");
+        this.naNameTextBox =
+            new TextBoxForm("表示名", false, "表示名を入力してください。");
+        this.naPasswordTextBox =
+            new TextBoxForm("パスワード", true, "パスワードを入力してください。");
+        this.naRePasswordTextBox =
+            new TextBoxForm("パスワードの確認", true, 
+                "確認のためもう一度パスワードを入力してください。");
+        jqueryObj.empty().addClass("modal-body");
+        this.naInviteKeyTextBox.make(jqueryObj);
+        this.naIdTextBox.make(jqueryObj);
+        this.naNameTextBox.make(jqueryObj);
+        this.naPasswordTextBox.make(jqueryObj);
+        this.naRePasswordTextBox.make(jqueryObj);
     }
 
     makeNewAccountHeader(jqueryObj){
@@ -1203,11 +1112,11 @@ class LoginModal{
             .off("click")
             .on("click", (e)=>{
                 var data = {
-                    id: $("#loginModalIdInput").val(),
-                    name: $("#loginModalNameInput").val(),
-                    password: $("#loginModalPasswordInput").val(),
-                    rePassword: $("#loginModalRePasswordInput").val(),
-                    inviteKey: $("#loginModalInviteKeyInput").val()
+                    id: this.naIdTextBox.value,
+                    name: this.naNameTextBox.value,
+                    password: this.naPasswordTextBox.value,
+                    rePassword: this.naRePasswordTextBox.value,
+                    inviteKey: this.naInviteKeyTextBox.value
                 };
                 this.newAccountFunc(data);
             });
@@ -1286,6 +1195,11 @@ class Event{
         return et == "watch" ? "放送視聴" : et == "report" ? "レポート" : "その他";
     }
 
+    static getEventTypeForTypeName(eventTypeName){
+        var etn = eventTypeName;
+        return etn == "放送視聴" ? "watch" : etn == "レポート" ? "report" : "other";
+    }
+
     static parse(data){
         var id = data["id"];
         var date = moment(data["date"], "YYYY-MM-DD");
@@ -1327,12 +1241,21 @@ class NavigationBar{
         }
         $("#navbarCollapse")
             .addClass("collapse navbar-collapse")
+            .append("<button id=\"navbarSettingButton\" />")
             .append("<button id=\"navbarLogoutButton\" />")
             .append("<p id=\"navbarLoginInfo\" />");
         $("#navbarLogoutButton")
             .addClass("btn btn-default navbar-btn navbar-right")
             .text("ログアウト");
         $("#navbarLoginInfo").addClass("navbar-right navbar-text");
+        $("#navbarSettingButton")
+            .addClass("btn btn-default navbar-btn navbar-right")
+            .text("設定")
+            .on("click", (e)=>{
+                var settingModal = new SettingModal();
+                settingModal.make($("#modals"));
+                settingModal.show();
+            });
     }
 
     title(title){
@@ -1348,6 +1271,577 @@ class NavigationBar{
         this.userName = name;
         var text = "{0}({1})でログインしています。".format(this.userId, this.userName);
         $("#navbarLoginInfo").text(text);
+    }
+}
+
+class TextBoxForm{
+    constructor(label = "", isPassword = false, placeholder = ""){
+        this._uniqueId = TextBoxForm.getUniqueId();
+        this._label = label;
+        this._type = isPassword ? "password" : "text";
+        this._placeholder = placeholder;
+        this._isMade = false;
+        TextBoxForm._validationColors = ["success", "warning", "error"];
+    }
+
+    get label(){
+        return this._label;
+    }
+    set label(value){
+        this._label = value;
+        if(this._isMade){
+            this._labelObj.text(this._label);
+        }
+    }
+
+    get isPassword(){
+        return this._type == "password";
+    }
+    set isPassword(value){
+        this._type = value ? "password" : "text";
+        if(this._isMade){
+            this._inputObj.attr({ "type": this._type });
+        }
+    }
+
+    get placeholder(){
+        return this._placeholder;
+    }
+    set placeholder(value){
+        this._placeholder = value;
+        if(this._isMade){
+            this._inputObj.attr({ "placeholder": this._placeholder });
+        }
+    }
+
+    get isMade(){
+        return this._isMade;
+    }
+
+    get value(){
+        if(!this._isMade){
+            return null;
+        }
+        return this._inputObj.val();
+    }
+
+    get jqueryObj(){
+        return this._inputObj;
+    }
+
+    make(ParentJqueryObj){
+        ParentJqueryObj
+            .append("<div id=\"textboxFormGroup{0}\" />".format(this._uniqueId));
+        this._formGroupObj = $("#textboxFormGroup{0}".format(this._uniqueId));
+        this._formGroupObj
+            .append("<label id=\"textboxLabel{0}\" />".format(this._uniqueId))
+            .append("<input id=\"textboxInput{0}\" />".format(this._uniqueId));
+        this._labelObj = $("#textboxLabel{0}".format(this._uniqueId));
+        this._inputObj = $("#textboxInput{0}".format(this._uniqueId));
+        this._formGroupObj.addClass("form-group");
+        this._labelObj
+            .text(this._label)
+            .attr({ "for": "textboxInput{0}".format(this._uniqueId) });
+        this._inputObj
+            .addClass("form-control")
+            .attr({
+                "type": this._type,
+                "placeholder": this._placeholder
+            });
+        this._isMade = true;
+    }
+
+    setValidationColor(name){
+        if(!TextBoxForm._isCorrectValidationColor(name)){
+            return;
+        }
+        if(!this._isMade){
+            return;
+        }
+        this._formGroupObj.addClass("has-{0}".format(name));
+    }
+
+    clearValidationColor(){
+        if(!this._isMade){
+            return;
+        }
+        TextBoxForm._validationColors.forEach((value)=>{
+            this._formGroupObj.removeClass("has-{0}".format(value));
+        });
+    }
+
+    static _isCorrectValidationColor(name){
+        return TextBoxForm._validationColors.indexOf(name) >= 0;
+    }
+
+    static getUniqueId(){
+        if(TextBoxForm.usedUniqueId == undefined){
+            TextBoxForm.usedUniqueId = 0;
+        }
+        var ret = TextBoxForm.usedUniqueId;
+        TextBoxForm.usedUniqueId++;
+        return ret;
+    }
+}
+
+class RadioButton{
+    constructor(label = "", name = ""){
+        this._uniqueId = RadioButton.getUniqueId();
+        this._label = label;
+        this._name = name;
+        this._value = "radio" + this._uniqueId;
+        this._isMade = false;
+    }
+
+    get label(){
+        return this._label;
+    }
+    set label(value){
+        this._label = value;
+        if(!this._isMade){
+            return;
+        }
+        this._labelSpanObj.text(this._label);
+    }
+
+    get isChecked(){
+        if(!this._isMade){
+            return undefined;
+        }
+        return $("input[name={0}]:checked".format(this._name)).val() === this._value;
+    }
+
+    get name(){
+        return this._name;
+    }
+    set name(value){
+        this._name = value;
+    }
+
+    get value(){
+        return this._value;
+    }
+    set value(value){
+        this._value = value;
+    }
+
+    get isMade(){
+        return this._isMade;
+    }
+
+    make(ParentJqueryObj){
+        ParentJqueryObj
+            .append("<div id=\"radiobutton{0}\" />".format(this._uniqueId));
+        $("#radiobutton{0}".format(this._uniqueId))
+            .append("<label id=\"radiobuttonLabel{0}\" />".format(this._uniqueId));
+        $("#radiobuttonLabel{0}".format(this._uniqueId))
+            .append("<input id=\"radiobuttonInput{0}\">".format(this._uniqueId))
+            .append("<span id=\"radiobuttonLabelSpan{0}\" />".format(this._uniqueId));
+        this._divObj = $("#radiobutton{0}".format(this._uniqueId));
+        this._inputObj = $("#radiobuttonInput{0}".format(this._uniqueId));
+        this._labelSpanObj = $("#radiobuttonLabelSpan{0}".format(this._uniqueId));
+        this._divObj.addClass("radio");
+        this._inputObj.attr({
+            "type": "radio",
+            "name": this._name,
+            "value": this._value
+        });
+        this._labelSpanObj.text(this._label);
+        this._isMade = true;
+    }
+
+    select(){
+        $("input[name={0}]".format(this._name)).val([this._value]);
+    }
+
+    static getUniqueId(){
+        if(RadioButton.usedUniqueId == undefined){
+            RadioButton.usedUniqueId = 0;
+        }
+        var ret = RadioButton.usedUniqueId;
+        RadioButton.usedUniqueId++;
+        return ret;
+    }
+}
+
+class RadioButtonGroup{
+    constructor(label = "", radioLabels = []){
+        this._uniqueId = RadioButtonGroup.getUniqueId();
+        this._radios = [];
+        this._label = label;
+        this._isMade = false;
+        RadioButtonGroup._validationColors = ["success", "warning", "error"];
+        radioLabels.forEach((value)=>{
+            this._radios[value] 
+                = new RadioButton(value, "radiogroup{0}".format(this._uniqueId));
+        });
+    }
+
+    get label(){
+        return this._label;
+    }
+    set label(value){
+        this._label = value;
+        if(!this._isMade){
+            return;
+        }
+        this._labelObj.text(this._label);
+    }
+
+    get radios(){
+        return this._radios;
+    }
+
+    get checked(){
+        if(!this._isMade){
+            return undefined;
+        }
+        var ret = null;
+        Object.keys(this._radios).forEach((index)=>{
+            if(this._radios[index].isChecked){
+                ret = index;
+            }
+        });
+        return ret;
+    }
+
+    get selected(){
+        return this.checked;
+    }
+
+    make(ParentJqueryObj){
+        ParentJqueryObj
+            .append("<div id=\"radiogroup{0}\" />".format(this._uniqueId));
+        this._radiogroupObj = $("#radiogroup{0}".format(this._uniqueId));
+        this._radiogroupObj
+            .append("<label id=\"radiogroupLabel{0}\" />".format(this._uniqueId));
+        this._labelObj = $("#radiogroupLabel{0}".format(this._uniqueId));
+        this._labelObj.text(this._label);
+        Object.keys(this._radios).forEach((index)=>{
+            this._radios[index].make(this._radiogroupObj);
+        });
+        this._isMade = true;
+    }
+
+    setValidationColor(name){
+        if(!RadioButtonGroup._isCorrectValidationColor(name)){
+            return;
+        }
+        if(!this._isMade){
+            return;
+        }
+        this._radiogroupObj.addClass("has-{0}".format(name));
+    }
+
+    clearValidationColor(){
+        if(!this._isMade){
+            return;
+        }
+        RadioButtonGroup._validationColors.forEach((value)=>{
+            this._radiogroupObj.removeClass("has-{0}".format(value));
+        });
+    }
+
+    static _isCorrectValidationColor(name){
+        return RadioButtonGroup._validationColors.indexOf(name) >= 0;
+    }
+
+    static getUniqueId(){
+        if(RadioButtonGroup.usedUniqueId == undefined){
+            RadioButtonGroup.usedUniqueId = 0;
+        }
+        var ret = RadioButtonGroup.usedUniqueId;
+        RadioButtonGroup.usedUniqueId++;
+        return ret;
+    }
+}
+
+class CheckBox{
+    constructor(label = ""){
+        this._uniqueId = CheckBox.getUniqueId();
+        this._label = label;
+        this._value = "checkbox" + this._uniqueId;
+        this._isMade = false;
+    }
+
+    get label(){
+        return this._label;
+    }
+    set label(value){
+        this._label = value;
+        if(!this._isMade){
+            return;
+        }
+        this._labelSpanObj.text(this._label);
+    }
+
+    get isChecked(){
+        if(!this._isMade){
+            return undefined;
+        }
+        return this._inputObj.prop("checked");
+    }
+
+    get value(){
+        return this._value;
+    }
+    set value(value){
+        this._value = value;
+    }
+
+    get isMade(){
+        return this._isMade;
+    }
+
+    make(ParentJqueryObj){
+        ParentJqueryObj
+            .append("<div id=\"checkbox{0}\" />".format(this._uniqueId));
+        $("#checkbox{0}".format(this._uniqueId))
+            .append("<label id=\"checkboxLabel{0}\" />".format(this._uniqueId));
+        $("#checkboxLabel{0}".format(this._uniqueId))
+            .append("<input id=\"checkboxInput{0}\">".format(this._uniqueId))
+            .append("<span id=\"checkboxLabelSpan{0}\" />".format(this._uniqueId));
+        this._divObj = $("#checkbox{0}".format(this._uniqueId));
+        this._inputObj = $("#checkboxInput{0}".format(this._uniqueId));
+        this._labelSpanObj = $("#checkboxLabelSpan{0}".format(this._uniqueId));
+        this._divObj.addClass("checkbox");
+        this._inputObj.attr({
+            "type": "checkbox",
+            "value": this._value
+        });
+        this._labelSpanObj.text(this._label);
+        this._isMade = true;
+    }
+
+    check(){
+        this._inputObj.prop("checked", true);
+    }
+
+    uncheck(){
+        this._inputObj.prop("checked", false);
+    }
+
+    static getUniqueId(){
+        if(CheckBox.usedUniqueId == undefined){
+            CheckBox.usedUniqueId = 0;
+        }
+        var ret = CheckBox.usedUniqueId;
+        CheckBox.usedUniqueId++;
+        return ret;
+    }
+}
+
+class Selectbox{
+    // items = [{value: xxx, text: xxx}, ...]
+    constructor(label, items = []){
+        this._uniqueId = Selectbox.getUniqueId();
+        this._items = items;
+        this._label = label;
+    }
+
+    get selected(){
+        return this._inputObj.val();
+    }
+
+    make(ParentJqueryObj){
+        ParentJqueryObj
+            .append("<div id=\"selectbox{0}\" />".format(this._uniqueId));
+        this._formGroupObj = $("#selectbox{0}".format(this._uniqueId));
+        this._formGroupObj
+            .append("<label id=\"selectboxLabel{0}\" />".format(this._uniqueId))
+            .append("<select id=\"selectboxInput{0}\" />".format(this._uniqueId));
+        this._labelObj = $("#selectboxLabel{0}".format(this._uniqueId));
+        this._inputObj = $("#selectboxInput{0}".format(this._uniqueId));
+        this._items.forEach((value)=>{
+            this._inputObj
+                .addClass("form-control")
+                .append("<option value=\"{0}\">{1}</option>"
+                    .format(value.value, value.text));
+        });
+        this._labelObj.text(this._label);
+    }
+
+    static getUniqueId(){
+        if(Selectbox.usedUniqueId == undefined){
+            Selectbox.usedUniqueId = 0;
+        }
+        var ret = Selectbox.usedUniqueId;
+        Selectbox.usedUniqueId++;
+        return ret;
+    }
+}
+
+class Modal{
+    constructor(){
+        this._uniqueId = Modal.getUniqueId();
+        this._title = "";
+    }
+
+    get title(){
+        return this._title;
+    }
+    set title(value){
+        this._title = value;
+    }
+
+    make(modalsJqueryObj){
+        modalsJqueryObj
+            .append("<div id=\"modal{0}\" />".format(this._uniqueId));
+        $("#modal{0}".format(this._uniqueId))
+            .addClass("modal fade")
+            .attr({ "tabindex": "-1" })
+            .append("<div id=\"modalDialog{0}\" />".format(this._uniqueId));
+        $("#modalDialog{0}".format(this._uniqueId))
+            .addClass("modal-dialog")
+            .append("<div id=\"modalContent{0}\" />".format(this._uniqueId));
+        $("#modalContent{0}".format(this._uniqueId))
+            .addClass("modal-content")
+            .append("<div id=\"modalHeader{0}\" />".format(this._uniqueId))
+            .append("<div id=\"modalBody{0}\" />".format(this._uniqueId))
+            .append("<div id=\"modalFooter{0}\" />".format(this._uniqueId));
+        this._headerObj = $("#modalHeader{0}".format(this._uniqueId));
+        this._bodyObj = $("#modalBody{0}".format(this._uniqueId));
+        this._footerObj = $("#modalFooter{0}".format(this._uniqueId));
+        this._headerObj.addClass("modal-header");
+        this._bodyObj.addClass("modal-body");
+        this._footerObj.addClass("modal-footer");
+        this._makeHeader();
+        this._makeBody();
+        this._makeFooter();
+    }
+
+    _makeHeader(){
+        this._headerObj
+            .append("<button id=\"modalCloseButton{0}\" />".format(this._uniqueId));
+        $("#modalCloseButton{0}".format(this._uniqueId))
+            .addClass("close")
+            .attr({
+                "type": "button",
+                "data-dismiss": "modal"
+            })
+            .text("×");
+        this._headerObj
+            .append("<h4 class=\"modal-title\">{0}</h4>".format(this._title));
+    }
+
+    _makeBody(){}
+
+    _makeFooter(){}
+
+    show(){
+        $("#modal{0}".format(this._uniqueId)).modal("show");
+    }
+
+    hide(){
+        $("#modal{0}".format(this._uniqueId)).modal("hide");
+    }
+
+    static getUniqueId(){
+        if(Modal.usedUniqueId == undefined){
+            Modal.usedUniqueId = 0;
+        }
+        var ret = Modal.usedUniqueId;
+        Modal.usedUniqueId++;
+        return ret;
+    }
+}
+
+class SettingModal extends Modal{
+    constructor(){
+        super();
+        this._title = "設定";
+        var settingsjson = Cookies.get("settings");
+        if(settingsjson != undefined){
+            this._settings = JSON.parse(settingsjson);
+        }
+    }
+
+    _makeBody(){
+        this._useShortNameCheckbox = 
+            new CheckBox("短い教科名で表示する");
+        this._useShortNameCheckbox.make(this._bodyObj);
+        if(this._settings != undefined 
+            && this._settings.useShortSubjectName){
+            this._useShortNameCheckbox.check();
+        }
+    }
+
+    _makeFooter(){
+        this._footerObj
+            .append("<button id=\"settingModalEnterButton{0}\" />"
+                .format(this._uniqueId));
+        $("#settingModalEnterButton{0}".format(this._uniqueId))
+            .addClass("btn btn-primary")
+            .append("設定を保存")
+            .on("click", (e)=>{
+                this._saveSettings();
+                this.hide();
+                location.reload();
+            });
+    }
+
+    _saveSettings(){
+        var settings = {
+            useShortSubjectName: this._useShortNameCheckbox.isChecked
+        };
+        Cookies.set("settings", JSON.stringify(settings));
+    }
+}
+
+class AddEventModal extends Modal{
+    constructor(subjectList = []){
+        super();
+        this._title = "課題を追加";
+        this._subjectList = subjectList;
+    }
+
+    get subjectList(){
+        return this._subjectList;
+    }
+    set subjectList(value){
+        this._subjectList = value;
+    }
+
+    _makeBody(){
+        this._dateTextBox = new TextBoxForm("日付", false, "日付を指定してください。");
+        this._selectList = [];
+        this._subjectList.forEach((value)=>{
+            this._selectList.push({value: value.id, text: value.name});
+        });
+        this._subjectSelectBox = new Selectbox("教科", this._selectList);
+        this._eventTypeRadios = new RadioButtonGroup("課題の種類", [
+            "レポート", "放送視聴", "その他"
+        ]);
+        this._eventTextBox = 
+            new TextBoxForm("追加情報", false, "追加の情報があれば記入してください。");
+        this._dateTextBox.make(this._bodyObj);
+        this._dateTextBox.jqueryObj.flatpickr({disableMobile: "true"});
+        this._subjectSelectBox.make(this._bodyObj);
+        this._eventTypeRadios.make(this._bodyObj);
+        this._eventTextBox.make(this._bodyObj);
+    }
+
+    _makeFooter(){
+        this._footerObj
+            .append("<button id=\"addEventSubmitButton{0}\" />"
+                .format(this._uniqueId));
+        $("#addEventSubmitButton{0}".format(this._uniqueId))
+            .addClass("btn btn-primary")
+            .append("課題を追加")
+            .on("click", (e)=>{
+                var subjectId = this._subjectSelectBox.selected;
+                var subject = new Subject(subjectId, null, null);
+                var date = moment(this._dateTextBox.value);
+                var eventType = 
+                    Event.getEventTypeForTypeName(this._eventTypeRadios.selected);
+                var text = this._eventTextBox.value;
+                var event = new Event(null, date, eventType, subject, text);
+                var accesser = new ServerAccesser();
+                accesser.submitNewEvent(event, ()=>{
+                    App.showTimetable();
+                    this.hide();
+                });
+            });
     }
 }
 
