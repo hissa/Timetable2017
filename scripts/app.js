@@ -8,6 +8,7 @@ class App{
             App.today = App.getToday();
             console.log("today: {0}".format(App.today.format("YYYY-MM-DD")));
             App.showTimetable();
+            Timetable.makeAddEventButton();
             App.showPagination();
         });
     }
@@ -247,6 +248,7 @@ class ServerAccesser{
         this.autoLoginUrl = "api/v1/auto_login.php";
         this.newAccountUrl = "api/v1/new_account.php";
         this.getUserInfoUrl = "api/v1/get_account_info.php";
+        this.getSubjectListUrl = "api/v1/get_subjectlist.php";
     }
 
     getLoginInfo(){
@@ -327,6 +329,20 @@ class ServerAccesser{
         };
         this.post(this.submitNewEventUrl, data, (data)=>{
             callback();
+        });
+    }
+
+    getSubjectList(callback){
+        this.getLoginInfo();
+        var url = "{0}?access_id={1}&access_key={2}"
+            .format(this.getSubjectListUrl, this.accessId, this.accessKey);
+        this.getJson(url, (data)=>{
+            var subjects = [];
+            data.forEach((value)=>{
+                subjects.push(Subject.parse(value));
+            });
+            callback(subjects);
+            return;
         });
     }
 
@@ -438,6 +454,23 @@ class Timetable{
         });
     }
 
+    static makeAddEventButton(){
+        var accesser = new ServerAccesser();
+        accesser.getSubjectList((data)=>{
+            Timetable.subjectList = data;
+            console.log(data);
+        });
+        $("#addEventButton")
+            .addClass("btn btn-primary btn-block")
+            .text("日付と教科を指定して課題を追加")
+            .css({ "margin-bottom": "20px" })
+            .on("click", ()=>{
+                var modal = new AddEventModal(Timetable.subjectList);
+                modal.make($("#modals"));
+                modal.show();
+            });
+    }
+
     makeTimetable(tableObject){
         var weeks = ["月", "火", "水", "木", "金"];
         tableObject.append("<thead id=\"table{0}thead\" />".format(this.uniqueId));
@@ -490,14 +523,21 @@ class Timetable{
     }
 
     setSubjectNames(shortName = false){
+        var settings = JSON.parse(Cookies.get("settings"));
+        var shortName = settings.useShortSubjectName;
         for(var week = 0; week < 5; week++){
             var day = this.days[week];
             for(var period = 0; period < 3; period++){
                 if(day == undefined){
                     console.log(this.days);
                 }
-                $("#table{0}w{1}p{2}".format(this.uniqueId, week, period))
-                    .text(day.periods[period].subject.name);
+                if(!shortName){
+                    $("#table{0}w{1}p{2}".format(this.uniqueId, week, period))
+                        .text(day.periods[period].subject.name);
+                }else{
+                    $("#table{0}w{1}p{2}".format(this.uniqueId, week, period))
+                        .text(day.periods[period].subject.shortName);
+                }
             }
         }
     }
@@ -1151,6 +1191,11 @@ class Event{
         return et == "watch" ? "放送視聴" : et == "report" ? "レポート" : "その他";
     }
 
+    static getEventTypeForTypeName(eventTypeName){
+        var etn = eventTypeName;
+        return etn == "放送視聴" ? "watch" : etn == "レポート" ? "report" : "other";
+    }
+
     static parse(data){
         var id = data["id"];
         var date = moment(data["date"], "YYYY-MM-DD");
@@ -1192,12 +1237,21 @@ class NavigationBar{
         }
         $("#navbarCollapse")
             .addClass("collapse navbar-collapse")
+            .append("<button id=\"navbarSettingButton\" />")
             .append("<button id=\"navbarLogoutButton\" />")
             .append("<p id=\"navbarLoginInfo\" />");
         $("#navbarLogoutButton")
             .addClass("btn btn-default navbar-btn navbar-right")
             .text("ログアウト");
         $("#navbarLoginInfo").addClass("navbar-right navbar-text");
+        $("#navbarSettingButton")
+            .addClass("btn btn-default navbar-btn navbar-right")
+            .text("設定")
+            .on("click", (e)=>{
+                var settingModal = new SettingModal();
+                settingModal.make($("#modals"));
+                settingModal.show();
+            });
     }
 
     title(title){
@@ -1265,6 +1319,10 @@ class TextBoxForm{
             return null;
         }
         return this._inputObj.val();
+    }
+
+    get jqueryObj(){
+        return this._inputObj;
     }
 
     make(ParentJqueryObj){
@@ -1566,6 +1624,216 @@ class CheckBox{
         var ret = CheckBox.usedUniqueId;
         CheckBox.usedUniqueId++;
         return ret;
+    }
+}
+
+class Selectbox{
+    // items = [{value: xxx, text: xxx}, ...]
+    constructor(label, items = []){
+        this._uniqueId = Selectbox.getUniqueId();
+        this._items = items;
+        this._label = label;
+    }
+
+    get selected(){
+        return this._inputObj.val();
+    }
+
+    make(ParentJqueryObj){
+        ParentJqueryObj
+            .append("<div id=\"selectbox{0}\" />".format(this._uniqueId));
+        this._formGroupObj = $("#selectbox{0}".format(this._uniqueId));
+        this._formGroupObj
+            .append("<label id=\"selectboxLabel{0}\" />".format(this._uniqueId))
+            .append("<select id=\"selectboxInput{0}\" />".format(this._uniqueId));
+        this._labelObj = $("#selectboxLabel{0}".format(this._uniqueId));
+        this._inputObj = $("#selectboxInput{0}".format(this._uniqueId));
+        this._items.forEach((value)=>{
+            this._inputObj
+                .addClass("form-control")
+                .append("<option value=\"{0}\">{1}</option>"
+                    .format(value.value, value.text));
+        });
+        this._labelObj.text(this._label);
+    }
+
+    static getUniqueId(){
+        if(Selectbox.usedUniqueId == undefined){
+            Selectbox.usedUniqueId = 0;
+        }
+        var ret = Selectbox.usedUniqueId;
+        Selectbox.usedUniqueId++;
+        return ret;
+    }
+}
+
+class Modal{
+    constructor(){
+        this._uniqueId = Modal.getUniqueId();
+        this._title = "";
+    }
+
+    get title(){
+        return this._title;
+    }
+    set title(value){
+        this._title = value;
+    }
+
+    make(modalsJqueryObj){
+        modalsJqueryObj
+            .append("<div id=\"modal{0}\" />".format(this._uniqueId));
+        $("#modal{0}".format(this._uniqueId))
+            .addClass("modal fade")
+            .attr({ "tabindex": "-1" })
+            .append("<div id=\"modalDialog{0}\" />".format(this._uniqueId));
+        $("#modalDialog{0}".format(this._uniqueId))
+            .addClass("modal-dialog")
+            .append("<div id=\"modalContent{0}\" />".format(this._uniqueId));
+        $("#modalContent{0}".format(this._uniqueId))
+            .addClass("modal-content")
+            .append("<div id=\"modalHeader{0}\" />".format(this._uniqueId))
+            .append("<div id=\"modalBody{0}\" />".format(this._uniqueId))
+            .append("<div id=\"modalFooter{0}\" />".format(this._uniqueId));
+        this._headerObj = $("#modalHeader{0}".format(this._uniqueId));
+        this._bodyObj = $("#modalBody{0}".format(this._uniqueId));
+        this._footerObj = $("#modalFooter{0}".format(this._uniqueId));
+        this._headerObj.addClass("modal-header");
+        this._bodyObj.addClass("modal-body");
+        this._footerObj.addClass("modal-footer");
+        this._makeHeader();
+        this._makeBody();
+        this._makeFooter();
+    }
+
+    _makeHeader(){
+        this._headerObj
+            .append("<button id=\"modalCloseButton{0}\" />".format(this._uniqueId));
+        $("#modalCloseButton{0}".format(this._uniqueId))
+            .addClass("close")
+            .attr({
+                "type": "button",
+                "data-dismiss": "modal"
+            })
+            .text("×");
+        this._headerObj
+            .append("<h4 class=\"modal-title\">{0}</h4>".format(this._title));
+    }
+
+    _makeBody(){}
+
+    _makeFooter(){}
+
+    show(){
+        $("#modal{0}".format(this._uniqueId)).modal("show");
+    }
+
+    hide(){
+        $("#modal{0}".format(this._uniqueId)).modal("hide");
+    }
+
+    static getUniqueId(){
+        if(Modal.usedUniqueId == undefined){
+            Modal.usedUniqueId = 0;
+        }
+        var ret = Modal.usedUniqueId;
+        Modal.usedUniqueId++;
+        return ret;
+    }
+}
+
+class SettingModal extends Modal{
+    constructor(){
+        super();
+        this._title = "設定";
+        this._settings = JSON.parse(Cookies.get("settings"));
+    }
+
+    _makeBody(){
+        this._useShortNameCheckbox = 
+            new CheckBox("短い教科名で表示する");
+        this._useShortNameCheckbox.make(this._bodyObj);
+        if(this._settings.useShortSubjectName){
+            this._useShortNameCheckbox.check();
+        }
+    }
+
+    _makeFooter(){
+        this._footerObj
+            .append("<button id=\"settingModalEnterButton{0}\" />"
+                .format(this._uniqueId));
+        $("#settingModalEnterButton{0}".format(this._uniqueId))
+            .addClass("btn btn-primary")
+            .append("設定を保存")
+            .on("click", (e)=>{
+                this._saveSettings();
+                this.hide();
+                location.reload();
+            });
+    }
+
+    _saveSettings(){
+        var settings = {
+            useShortSubjectName: this._useShortNameCheckbox.isChecked
+        };
+        Cookies.set("settings", JSON.stringify(settings));
+    }
+}
+
+class AddEventModal extends Modal{
+    constructor(subjectList = []){
+        super();
+        this._title = "課題を追加";
+        this._subjectList = subjectList;
+    }
+
+    get subjectList(){
+        return this._subjectList;
+    }
+    set subjectList(value){
+        this._subjectList = value;
+    }
+
+    _makeBody(){
+        this._dateTextBox = new TextBoxForm("日付", false, "日付を指定してください。");
+        this._selectList = [];
+        this._subjectList.forEach((value)=>{
+            this._selectList.push({value: value.id, text: value.name});
+        });
+        this._subjectSelectBox = new Selectbox("教科", this._selectList);
+        this._eventTypeRadios = new RadioButtonGroup("課題の種類", [
+            "レポート", "放送視聴", "その他"
+        ]);
+        this._eventTextBox = 
+            new TextBoxForm("追加情報", false, "追加の情報があれば記入してください。");
+        this._dateTextBox.make(this._bodyObj);
+        this._dateTextBox.jqueryObj.flatpickr({disableMobile: "true"});
+        this._subjectSelectBox.make(this._bodyObj);
+        this._eventTypeRadios.make(this._bodyObj);
+        this._eventTextBox.make(this._bodyObj);
+    }
+
+    _makeFooter(){
+        this._footerObj
+            .append("<button id=\"addEventSubmitButton{0}\" />"
+                .format(this._uniqueId));
+        $("#addEventSubmitButton{0}".format(this._uniqueId))
+            .addClass("btn btn-primary")
+            .append("課題を追加")
+            .on("click", (e)=>{
+                var subjectId = this._subjectSelectBox.selected;
+                var subject = new Subject(subjectId, null, null);
+                var date = moment(this._dateTextBox.value);
+                var eventType = 
+                    Event.getEventTypeForTypeName(this._eventTypeRadios.selected);
+                var text = this._eventTextBox.value;
+                var event = new Event(null, date, eventType, subject, text);
+                var accesser = new ServerAccesser();
+                accesser.submitNewEvent(event, ()=>{
+                    App.showTimetable();
+                    this.hide();
+                });
+            });
     }
 }
 
