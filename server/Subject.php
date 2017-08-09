@@ -67,6 +67,17 @@ class Subject{
         return $schedules;
      }
 
+     public static function getSubjectList(){
+        if(static::$SubjectsTable == null){
+            static::Initialize();
+        }
+        $subjects = [];
+        foreach(static::$SubjectsTable as $value){
+            $subjects[] = new self($value["id"]);
+        }
+        return $subjects;
+     }
+
      public function ToArray(){
          return [
              "id" => $this->Id,
