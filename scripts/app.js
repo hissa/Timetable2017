@@ -523,8 +523,12 @@ class Timetable{
     }
 
     setSubjectNames(shortName = false){
-        var settings = JSON.parse(Cookies.get("settings"));
-        var shortName = settings.useShortSubjectName;
+        var settingjson = Cookies.get("settings");
+        var shortName = false;
+        if(settingjson != undefined){
+            var settings = JSON.parse(settingjson);
+            var shortName = settings.useShortSubjectName;
+        }
         for(var week = 0; week < 5; week++){
             var day = this.days[week];
             for(var period = 0; period < 3; period++){
@@ -1746,14 +1750,18 @@ class SettingModal extends Modal{
     constructor(){
         super();
         this._title = "設定";
-        this._settings = JSON.parse(Cookies.get("settings"));
+        var settingsjson = Cookies.get("settings");
+        if(settingsjson != undefined){
+            this._settings = JSON.parse(settingsjson);
+        }
     }
 
     _makeBody(){
         this._useShortNameCheckbox = 
             new CheckBox("短い教科名で表示する");
         this._useShortNameCheckbox.make(this._bodyObj);
-        if(this._settings.useShortSubjectName){
+        if(this._settings != undefined 
+            && this._settings.useShortSubjectName){
             this._useShortNameCheckbox.check();
         }
     }
