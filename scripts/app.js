@@ -6,7 +6,6 @@ class App{
             App.showingWeek = 0;
             App.hourOfNextDay = 15;
             App.today = App.getToday();
-            console.log("today: {0}".format(App.today.format("YYYY-MM-DD")));
             App.showTimetable();
             Timetable.makeAddEventButton();
             App.showPagination();
@@ -84,7 +83,6 @@ class App{
         }); 
         var accesser = new ServerAccesser();
         var account = accesser.getUserInfo((data)=>{
-            console.log(data);
             var id = data["user_id"];
             var name = data["user_name"];
             App.navbar.addLoginInfo(id, name);
@@ -118,11 +116,8 @@ class App{
     static showTimetable(){
         App.removeShowing();
         var date = App.today.clone();
-        console.log("showingWeek:{0}".format(App.showingWeek));
         var start = date.clone().add(App.showingWeek, "weeks").day("Monday");
         var end = start.clone().day("Friday");
-        console.log("showing start:{0} end:{1}"
-            .format(start.format("YYYY-MM-DD"), end.format("YYYY-MM-DD")));
         App.timetable = new Timetable(start, end, ()=>{
             App.removeShowing();
             App.timetable.setAddEventEvent((date, subject, eventType, text)=>{
@@ -131,7 +126,6 @@ class App{
                 var accesser = new ServerAccesser();
                 accesser.submitNewEvent(event, ()=>{
                     App.showTimetable();
-                    console.log("submitted");
                 });
             });
             App.timetable.makeTimetable($("#timetable"));
@@ -458,7 +452,6 @@ class Timetable{
         var accesser = new ServerAccesser();
         accesser.getSubjectList((data)=>{
             Timetable.subjectList = data;
-            console.log(data);
         });
         $("#addEventButton")
             .addClass("btn btn-primary btn-block")
@@ -533,7 +526,6 @@ class Timetable{
             var day = this.days[week];
             for(var period = 0; period < 3; period++){
                 if(day == undefined){
-                    console.log(this.days);
                 }
                 if(!shortName){
                     $("#table{0}w{1}p{2}".format(this.uniqueId, week, period))
@@ -570,8 +562,6 @@ class Timetable{
                 };
                 $("#table{0}w{1}p{2}".format(this.uniqueId, week, period))
                     .off("click").on("click", periodData, (e)=>{
-                        console.log("Clicked week: {0}, period: {1}".format(e.data.weekNum, e.data.periodNum));
-                        console.log(e.data.period);
                         var modal = new TimetableModal(e.data.date, e.data.period);
                         modal.make($("#modals"));
                         if(this.addEventEvent != undefined){
@@ -637,8 +627,6 @@ class Timetable{
             this.days.push(new Day(currentDate, periods));
             day++;
         }
-        console.log(this.days);
-        console.log(this.eventsData);
         this.ready();
     }
 
@@ -1815,7 +1803,7 @@ class AddEventModal extends Modal{
         this._eventTextBox = 
             new TextBoxForm("追加情報", false, "追加の情報があれば記入してください。");
         this._dateTextBox.make(this._bodyObj);
-        this._dateTextBox.jqueryObj.flatpickr({disableMobile: "true"});
+        this._dateTextBox.jqueryObj.flatpickr({disableMobile: "true", "locale": "ja" });
         this._subjectSelectBox.make(this._bodyObj);
         this._eventTypeRadios.make(this._bodyObj);
         this._eventTextBox.make(this._bodyObj);
