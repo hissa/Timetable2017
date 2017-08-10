@@ -1803,7 +1803,7 @@ class AddEventModal extends Modal{
         this._eventTextBox = 
             new TextBoxForm("追加情報", false, "追加の情報があれば記入してください。");
         this._dateTextBox.make(this._bodyObj);
-        this._dateTextBox.jqueryObj.flatpickr({disableMobile: "true"});
+        this._dateTextBox.jqueryObj.flatpickr({disableMobile: "true", "locale": "ja" });
         this._subjectSelectBox.make(this._bodyObj);
         this._eventTypeRadios.make(this._bodyObj);
         this._eventTextBox.make(this._bodyObj);
