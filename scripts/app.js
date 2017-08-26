@@ -1804,7 +1804,7 @@ class AddEventModal extends Modal{
         this._subjectSelectBox = new Selectbox("教科", this._selectList);
         this._eventTypeRadios = new RadioButtonGroup("課題の種類", [
             "レポート", "放送視聴", "その他"
-        ]);
+        ], "その他");
         this._eventTextBox = 
             new TextBoxForm("追加情報", false, "追加の情報があれば記入してください。");
         this._dateTextBox.make(this._bodyObj);
