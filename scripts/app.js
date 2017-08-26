@@ -859,7 +859,7 @@ class TimetableModal{
                     this.addEventFunc(
                         this.date,
                         this.period.subject,
-                        this.eventTypeRadioGroup.checked,
+                        Event.getEventTypeForTypeName(this.eventTypeRadioGroup.checked),
                         this.eventTextBox.value
                     );
                     this.hide();
@@ -877,7 +877,7 @@ class TimetableModal{
 
     makeAddEventFormBody(jqueryObj){
         this.eventTypeRadioGroup 
-            = new RadioButtonGroup("課題の種類", ["レポート", "放送視聴", "その他"]);
+            = new RadioButtonGroup("課題の種類", ["レポート", "放送視聴", "その他"], "その他");
         this.eventTextBox
             = new TextBoxForm("追加情報", false, "追加の情報があれば記入してください。");
         jqueryObj.empty();
@@ -1373,12 +1373,13 @@ class TextBoxForm{
 }
 
 class RadioButton{
-    constructor(label = "", name = ""){
+    constructor(label = "", name = "", selected = false){
         this._uniqueId = RadioButton.getUniqueId();
         this._label = label;
         this._name = name;
         this._value = "radio" + this._uniqueId;
         this._isMade = false;
+        this._selected = selected;
     }
 
     get label(){
@@ -1434,6 +1435,9 @@ class RadioButton{
             "name": this._name,
             "value": this._value
         });
+        if(this._selected){
+            this._inputObj.attr({ "checked": "checked" });
+        }
         this._labelSpanObj.text(this._label);
         this._isMade = true;
     }
@@ -1453,15 +1457,16 @@ class RadioButton{
 }
 
 class RadioButtonGroup{
-    constructor(label = "", radioLabels = []){
+    constructor(label = "", radioLabels = [], selected = ""){
         this._uniqueId = RadioButtonGroup.getUniqueId();
         this._radios = [];
         this._label = label;
         this._isMade = false;
         RadioButtonGroup._validationColors = ["success", "warning", "error"];
         radioLabels.forEach((value)=>{
+            var isSelected = value == selected;
             this._radios[value] 
-                = new RadioButton(value, "radiogroup{0}".format(this._uniqueId));
+                = new RadioButton(value, "radiogroup{0}".format(this._uniqueId), selected);
         });
     }
 
@@ -1799,7 +1804,7 @@ class AddEventModal extends Modal{
         this._subjectSelectBox = new Selectbox("教科", this._selectList);
         this._eventTypeRadios = new RadioButtonGroup("課題の種類", [
             "レポート", "放送視聴", "その他"
-        ]);
+        ], "その他");
         this._eventTextBox = 
             new TextBoxForm("追加情報", false, "追加の情報があれば記入してください。");
         this._dateTextBox.make(this._bodyObj);
