@@ -720,6 +720,8 @@ class Timetable{
             .append("<th id=\"table{0}eventlistHead{1}\">{2}</th>"
                 .format(this.uniqueId, "Subject", "教科"))
             .append("<th id=\"table{0}eventlistHead{1}\">{2}</th>"
+                .format(this.uniqueId, "Subject", "種類"))
+            .append("<th id=\"table{0}eventlistHead{1}\">{2}</th>"
                 .format(this.uniqueId, "Text", "詳細"));
         var i = 0;
         while(this.eventsData[i]){
@@ -729,10 +731,13 @@ class Timetable{
             $("#table{0}eventlistId{1}".format(this.uniqueId, this.eventsData[i].id))
                 .append("<td id=\"table{0}eventlistId{1}{2}\">{3}</td>"
                     .format(this.uniqueId, this.eventsData[i].id, "Date",
-                            this.eventsData[i].date.format("MM / DD")))
+                            this.eventsData[i].date.format("M / D")))
                 .append("<td id=\"table{0}eventlistId{1}{2}\">{3}</td>"
                     .format(this.uniqueId, this.eventsData[i].id, "Subject",
                             this.eventsData[i].subject.shortName))
+                .append("<td id=\"table{0}eventlistId{1}{2}\">{3}</td>"
+                    .format(this.uniqueId, this.eventsData[i].id, "Type",
+                            this.eventsData[i].eventTypeForShow))
                 .append("<td id=\"table{0}eventlistId{1}{2}\">{3}</td>"
                     .format(this.uniqueId, this.eventsData[i].id, "Text",
                             this.eventsData[i].text));
