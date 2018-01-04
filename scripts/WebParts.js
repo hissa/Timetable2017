@@ -179,8 +179,13 @@ class Timetable{
             var day = this.days[week];
             for(var period = 0; period < 3; period++){
                 if(day.periods[period].events[0] != undefined){
-                    $("#table{0}w{1}p{2}".format(this.uniqueId, week, period))
-                        .addClass("info");
+                    if(day.periods[period].events[0].eventType == "watch"){
+                        $("#table{0}w{1}p{2}".format(this.uniqueId, week, period))
+                            .addClass("danger");
+                    }else{
+                        $("#table{0}w{1}p{2}".format(this.uniqueId, week, period))
+                            .addClass("info");
+                    }
                 }
             }
         }
