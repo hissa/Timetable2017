@@ -5,6 +5,7 @@
     <title>WEB版時間割2017</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="utf-8">
+    <!--LoadLibraries-->
      <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
         crossorigin="anonymous"></script>
@@ -21,6 +22,7 @@
     <!-- Latest compiled and minified JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
         crossorigin="anonymous"></script>
+    <!--End LoadLibraries-->
 </head>
 
 <body>
@@ -36,6 +38,7 @@
         <table class="table table-striped table-bordered" id="eventlist"></table>
     </div>
     <div id="modals"></div>
+    <!--LoadLibraries-->
     <!--Moment.js -->
     <script src="./scripts/libs/moment-with-locales.js"></script>
     <!-- string-format.js -->
@@ -44,8 +47,13 @@
     <link rel="stylesheet" href="https://unpkg.com/flatpickr/dist/flatpickr.min.css">
     <script src="https://unpkg.com/flatpickr"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/ja.js"></script>
-
+    <!--End LoadLibraries-->
+    <!--Load JS files-->
+    <script src="./scripts/Server.js"></script>
+    <script src="./scripts/Timetable.js"></script>
+    <script src="./scripts/WebParts.js"></script>
     <script src="./scripts/app.js"></script>
+    <!--End Load JS files-->
 </body>
 
 </html>
