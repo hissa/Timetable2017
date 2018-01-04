@@ -90,7 +90,7 @@ class App{
     }
 
     static getToday(date = null){
-        date = date == null ? moment() : date;
+        date = moment();
         if(date.format("H") >= App.hourOfNextDay){
             date.add(1, "days");
         }
@@ -144,19 +144,26 @@ class App{
     static addShowingWeek(num = 1){
         // App.closeAllPopover();
         App.showingWeek += num;
+        App.ReloadToday();
         App.showTimetable();
     }
 
     static subtractShowingWeek(num = 1){
         // App.closeAllPopover();
         App.showingWeek -= num;
+        App.ReloadToday();
         App.showTimetable();
     }
 
     static setZeroShowingWeek(){
         // App.closeAllPopover();
         App.showingWeek = 0;
+        App.ReloadToday();
         App.showTimetable();
+    }
+
+    static ReloadToday(){
+        App.today = App.getToday();
     }
 }
 
